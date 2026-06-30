@@ -1,0 +1,31 @@
+# Source PDF corpora and generated parser outputs
+Safety/
+Security/
+outputs/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Python packaging/build artifacts
+*.egg-info/
+build/
+dist/
+*.egg
+
+# Local/editor/OS files
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

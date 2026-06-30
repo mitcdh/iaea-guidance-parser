@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iaea-guidance-parser"
+version = "0.2.0"
+description = "Precompute structural indexes and Custom GPT knowledge inputs for IAEA guidance PDF directories and individual PDFs."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pymupdf>=1.23",
+  "pydantic>=2.0",
+  "PyYAML>=6.0",
+  "typer>=0.9",
+  "rich>=13.0",
+  "pandas>=2.0",
+  "pdfplumber>=0.10",
+]
+
+[project.scripts]
+iaea-guidance-parser = "iaea_guidance_parser.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
