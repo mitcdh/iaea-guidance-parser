@@ -5,7 +5,7 @@ import re
 # Accept both hyphen-minus, non-breaking hyphen, figure dash and en dash.
 DASH_CLASS = r"[-‑–—]"
 
-BODY_PARA_RE = re.compile(r"^(?P<id>\d+\.\d+)\.\s*(?P<text>.*)")
+BODY_PARA_RE = re.compile(r"^(?P<id>(?:\d+\.\d+|\d{3}(?:\.\d+)?))\.\s*(?P<text>.*)")
 APPENDIX_PARA_RE = re.compile(r"^(?P<id>A\.\d+)\.\s*(?P<text>.*)")
 ANNEX_PARA_RE = re.compile(rf"^(?P<id>[IVXLCDM]+{DASH_CLASS}\d+)\.\s*(?P<text>.*)")
 SUBPARA_RE = re.compile(r"^\((?:[a-z]|[ivxlcdm]+|\d+)\)\s+")

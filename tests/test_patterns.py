@@ -18,6 +18,8 @@ from iaea_guidance_parser.series import safe_path_component
 
 def test_paragraph_patterns():
     assert BODY_PARA_RE.match("1.1. Nuclear security seeks to prevent")
+    assert BODY_PARA_RE.match("101. These Regulations establish standards of safety")
+    assert BODY_PARA_RE.match("101.1. Radiation and radioactive substances are natural")
     assert APPENDIX_PARA_RE.match("A.64. The operator should consider")
     assert ANNEX_PARA_RE.match("III–21. As noted in para. III–13")
 
@@ -264,6 +266,131 @@ def test_nuclear_security_suffix_type_inference(tmp_path):
     assert implementing.document_type == "implementing_guides"
 
 
+def test_title_inference_skips_generic_category_page_and_garbled_cover(tmp_path):
+    nss_pdf = tmp_path / "NSS 46-T Security of Nuclear and Other Radioactive Material in Transport.pdf"
+    nss_pdf.write_bytes(b"not a real pdf")
+    nss_metadata = infer_metadata(
+        nss_pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text="\n".join(
+                    [
+                        "RECOMMENDATIONS",
+                        "IMPLEMENTING GUIDE",
+                        "NUCLEAR SECURITY FUNDAMENTALS",
+                        "TECHNICAL GUIDANCE",
+                    ]
+                ),
+                lines=[
+                    "RECOMMENDATIONS",
+                    "IMPLEMENTING GUIDE",
+                    "NUCLEAR SECURITY FUNDAMENTALS",
+                    "TECHNICAL GUIDANCE",
+                ],
+            ),
+            PageText(
+                pdf_page=3,
+                printed_page=None,
+                text="\n".join(
+                    [
+                        "SECURITY OF NUCLEAR AND",
+                        "OTHER RADIOACTIVE MATERIAL",
+                        "IN TRANSPORT",
+                    ]
+                ),
+                lines=[
+                    "SECURITY OF NUCLEAR AND",
+                    "OTHER RADIOACTIVE MATERIAL",
+                    "IN TRANSPORT",
+                ],
+            ),
+        ],
+        {"document": {"series_name": "IAEA Nuclear Security Series", "document_domain": "nuclear_security"}},
+    )
+    assert nss_metadata.title == "Security Of Nuclear And Other Radioactive Material In Transport"
+
+    safety_pdf = tmp_path / "GS-G-3.1 Application of the Management System for Facilities and Activities.pdf"
+    safety_pdf.write_bytes(b"not a real pdf")
+    safety_metadata = infer_metadata(
+        safety_pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text=",$($\x036Dihw\\\x036Wdqgdugv $SSOLFDWLRQ\x03RI",
+                lines=[",$($\x036Dihw\\\x036Wdqgdugv", "$SSOLFDWLRQ\x03RI"],
+            ),
+            PageText(
+                pdf_page=3,
+                printed_page=None,
+                text="\n".join(
+                    [
+                        "APPLICATION OF THE",
+                        "MANAGEMENT SYSTEM FOR",
+                        "FACILITIES AND ACTIVITIES",
+                    ]
+                ),
+                lines=[
+                    "APPLICATION OF THE",
+                    "MANAGEMENT SYSTEM FOR",
+                    "FACILITIES AND ACTIVITIES",
+                ],
+            ),
+        ],
+        {"document": {"series_name": "IAEA Safety Standards Series", "document_domain": "nuclear_safety"}},
+    )
+    assert safety_metadata.title == "Application Of The Management System For Facilities And Activities"
+
+
+def test_title_inference_uses_filename_when_pdf_title_is_unusable(tmp_path):
+    pdf = tmp_path / "WS-G-6.1 Storage of Radioactive Waste.pdf"
+    pdf.write_bytes(b"not a real pdf")
+    metadata = infer_metadata(
+        pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text=",$($\x036Dihw\\\x036Wdqgdugv 6WRUDJH\x03RI\x03\x035DGLRDFWLYH\x03:DVWH",
+                lines=[",$($\x036Dihw\\\x036Wdqgdugv", "6WRUDJH\x03RI\x03\x035DGLRDFWLYH\x03:DVWH"],
+            )
+        ],
+        {"document": {"series_name": "IAEA Safety Standards Series", "document_domain": "nuclear_safety"}},
+    )
+    assert metadata.title == "Storage Of Radioactive Waste"
+    assert metadata.metadata_source["title"] == "filename"
+
+
+def test_computer_security_title_special_case_is_not_overbroad(tmp_path):
+    pdf = tmp_path / "NSS 33-T Computer Security of Instrumentation and Control Systems at Nuclear Facilities.pdf"
+    pdf.write_bytes(b"not a real pdf")
+    metadata = infer_metadata(
+        pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text="\n".join(
+                    [
+                        "COMPUTER SECURITY OF",
+                        "INSTRUMENTATION AND CONTROL SYSTEMS",
+                        "AT NUCLEAR FACILITIES",
+                    ]
+                ),
+                lines=[
+                    "COMPUTER SECURITY OF",
+                    "INSTRUMENTATION AND CONTROL SYSTEMS",
+                    "AT NUCLEAR FACILITIES",
+                ],
+            )
+        ],
+        {"document": {"series_name": "IAEA Nuclear Security Series", "document_domain": "nuclear_security"}},
+    )
+    assert metadata.title == "Computer Security Of Instrumentation And Control Systems At Nuclear Facilities"
+
+
 def test_remove_pdf_line_breaks_joins_wrapped_prose_but_preserves_structural_starts():
     lines = remove_pdf_line_breaks(
         [
@@ -301,6 +428,13 @@ def test_status_classification_uses_spess_c_structure():
     )
     assert body_status == "Normative"
     assert "primary technical content" in body_reason
+
+    body_text_block_status, _ = classify_status(
+        element_type="text_block",
+        source_region="Body",
+        section_path=["2. SECURITY MEASURES", "GENERAL"],
+    )
+    assert body_text_block_status == "Normative"
 
     appendix_status, appendix_reason = classify_status(
         element_type="paragraph",
@@ -359,6 +493,162 @@ def test_parser_enters_body_without_printed_page_number():
     assert paragraphs["2.1"].source_region == "Body"
     assert paragraphs["2.1"].text_status == "Normative"
     assert paragraphs["2.1"].section_path == ["2. OBJECTIVES"]
+
+
+def test_parser_keeps_safety_series_overview_before_introduction_in_front_matter():
+    metadata = DocumentMetadata(
+        document_id="GSR-PART-1-REV1",
+        source_file="GSR.pdf",
+        source_sha256="abc123",
+        title="Governmental, Legal and Regulatory Framework for Safety",
+        series_name="IAEA Safety Standards Series",
+        series_number="No. GSR Part 1 (Rev. 1)",
+        document_family="IAEA Safety Standards Series",
+        document_category="General Safety Requirements",
+        document_type="general_safety_requirements",
+        document_domain="nuclear_safety",
+    )
+    parser = IAEAGuidanceParser(
+        metadata,
+        [
+            PageText(
+                pdf_page=11,
+                printed_page=None,
+                text="",
+                lines=[
+                    "1. Site Evaluation for Nuclear Installations",
+                    "2. Safety of Nuclear Power Plants",
+                    "2.1. Design and Construction",
+                    "2.2. Commissioning and Operation",
+                    "FIG. 1. The long term structure of the IAEA Safety Standards Series.",
+                ],
+            ),
+            PageText(
+                pdf_page=23,
+                printed_page=None,
+                text="",
+                lines=[
+                    "1. INTRODUCTION",
+                    "BACKGROUND",
+                    "1.1. Introductory safety context.",
+                    "2. RESPONSIBILITIES AND FUNCTIONS OF THE GOVERNMENT",
+                    "2.1. The government shall establish a national policy and strategy for safety.",
+                ],
+            ),
+        ],
+        include_text_blocks=True,
+    )
+
+    _, records = parser.parse()
+    pre_intro_records = [record for record in records if record.page_start_pdf == 11]
+    assert pre_intro_records
+    assert {record.source_region for record in pre_intro_records} == {"FrontMatter"}
+    assert {record.text_status for record in pre_intro_records} == {"Informational"}
+
+    body_paragraph = next(
+        record for record in records if record.element_type == "paragraph" and record.element_id == "2.1" and record.page_start_pdf == 23
+    )
+    assert body_paragraph.source_region == "Body"
+    assert body_paragraph.text_status == "Normative"
+
+
+def test_parser_ignores_contents_region_headings_before_body():
+    metadata = DocumentMetadata(
+        document_id="GSG-17",
+        source_file="GSG-17.pdf",
+        source_sha256="abc123",
+        title="Application of the Concept of Exemption",
+        series_name="IAEA Safety Standards Series",
+        series_number="No. GSG-17",
+        document_family="IAEA Safety Standards Series",
+        document_category="General Safety Guide",
+        document_type="general_safety_guide",
+        document_domain="nuclear_safety",
+    )
+    parser = IAEAGuidanceParser(
+        metadata,
+        [
+            PageText(
+                pdf_page=15,
+                printed_page=None,
+                text="",
+                lines=[
+                    "CONTENTS",
+                    "REFERENCES",
+                    "ANNEX II",
+                    "EXAMPLES OF DOSIMETRIC MODELS",
+                ],
+            ),
+            PageText(
+                pdf_page=17,
+                printed_page="1",
+                text="",
+                lines=[
+                    "1. INTRODUCTION",
+                    "BACKGROUND",
+                    "1.1. Introductory safety context.",
+                    "2. THE CONCEPTS OF EXCLUSION, EXEMPTION",
+                    "2.1. The regulatory body should apply the concept.",
+                ],
+            ),
+        ],
+        include_text_blocks=True,
+    )
+
+    _, records = parser.parse()
+    contents_records = [record for record in records if record.page_start_pdf == 15]
+    assert contents_records
+    assert {record.source_region for record in contents_records} == {"FrontMatter"}
+    paragraph = next(record for record in records if record.element_type == "paragraph" and record.element_id == "2.1")
+    assert paragraph.source_region == "Body"
+    assert paragraph.text_status == "Normative"
+
+
+def test_parser_enters_body_for_transport_style_numbering_after_contents():
+    metadata = DocumentMetadata(
+        document_id="SSR-6-REV2",
+        source_file="SSR-6.pdf",
+        source_sha256="abc123",
+        title="Regulations for the Safe Transport of Radioactive Material",
+        series_name="IAEA Safety Standards Series",
+        series_number="No. SSR-6 (Rev. 2)",
+        document_family="IAEA Safety Standards Series",
+        document_category="Specific Safety Requirements",
+        document_type="specific_safety_requirements",
+        document_domain="nuclear_safety",
+    )
+    parser = IAEAGuidanceParser(
+        metadata,
+        [
+            PageText(
+                pdf_page=17,
+                printed_page=None,
+                text="",
+                lines=[
+                    "CONTENTS",
+                    "SECTION I. INTRODUCTION 1 Background (101-103) . . . . . . . 1",
+                ],
+            ),
+            PageText(
+                pdf_page=21,
+                printed_page="1",
+                text="",
+                lines=[
+                    "INTRODUCTION",
+                    "101. These Regulations establish standards of safety.",
+                    "201. A1 shall mean the activity value of special form radioactive material.",
+                ],
+            ),
+        ],
+        include_text_blocks=True,
+    )
+
+    _, records = parser.parse()
+    paragraphs = {record.element_id: record for record in records if record.element_type == "paragraph"}
+    assert paragraphs["101"].source_region == "Body"
+    assert paragraphs["101"].text_status == "Informational"
+    assert paragraphs["201"].source_region == "Body"
+    assert paragraphs["201"].text_status == "Normative"
 
 
 def test_front_matter_related_publications_does_not_force_backmatter():

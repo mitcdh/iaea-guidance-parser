@@ -69,7 +69,7 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
     first_text = "\n".join(p.text for p in pages[:10])
     all_text = "\n".join(p.text for p in pages[:20])
 
-    title = cfg_doc.get("title") or _infer_title(first_text, pages[:10]) or cfg_fallback.get("title", "")
+    title, title_source = _resolve_title(pdf_path, first_text, pages[:10], cfg_doc, cfg_fallback)
     inferred_series_name = _infer_series_name(first_text)
     series_name = cfg_doc.get("series_name") or inferred_series_name or cfg_fallback.get("series_name", "")
     series_number = cfg_doc.get("series_number") or _infer_series_number(first_text) or cfg_fallback.get("series_number", "")
@@ -109,7 +109,7 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
         language=cfg_doc.get("language", "en"),
         metadata_source={
             "document_id": "config" if cfg_doc.get("document_id") else "inferred",
-            "title": "config" if cfg_doc.get("title") else "inferred",
+            "title": title_source,
             "series_name": "config" if cfg_doc.get("series_name") else "inferred",
             "series_number": "config" if cfg_doc.get("series_number") else "inferred",
             "document_category": "config" if cfg_doc.get("document_category") else ("inferred" if inferred_category else "fallback"),
@@ -118,21 +118,49 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
     )
 
 
+def _resolve_title(
+    pdf_path: Path,
+    first_text: str,
+    pages: list[PageText],
+    cfg_doc: dict[str, Any],
+    cfg_fallback: dict[str, Any],
+) -> tuple[str, str]:
+    if cfg_doc.get("title"):
+        return str(cfg_doc["title"]), "config"
+
+    inferred = _infer_title(first_text, pages)
+    if _is_usable_title(inferred):
+        return inferred, "inferred"
+
+    filename_title = _infer_title_from_filename(pdf_path)
+    if _is_usable_title(filename_title):
+        return filename_title, "filename"
+
+    if inferred:
+        return inferred, "inferred_unverified"
+    return cfg_fallback.get("title", ""), "fallback"
+
+
 def _infer_title(text: str, pages: list[PageText] | None = None) -> str:
     # Title page usually presents title as 2-4 lines after category.
-    if "COMPUTER SECURITY" in text and "NUCLEAR FACILITIES" in text:
+    if "COMPUTER SECURITY TECHNIQUES" in text and "NUCLEAR FACILITIES" in text:
         return "Computer Security Techniques for Nuclear Facilities"
     if pages:
         for page in pages:
+            if _looks_like_generic_category_page(page.lines):
+                continue
             candidates = [_clean_title_line(line) for line in page.lines]
             candidates = [line for line in candidates if _is_title_candidate(line)]
             # Skip member-state lists and other dense all-caps catalogue pages.
             if 2 <= len(candidates) <= 8:
-                return " ".join(candidates).title()
+                title = _title_case(" ".join(candidates))
+                if _is_usable_title(title):
+                    return title
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     candidates = [_clean_title_line(line) for line in lines]
     candidates = [line for line in candidates if _is_title_candidate(line)]
-    return " ".join(candidates[:5]).title() if candidates else ""
+    title = _title_case(" ".join(candidates[:5])) if candidates else ""
+    return title if _is_usable_title(title) else ""
 
 
 def _clean_title_line(line: str) -> str:
@@ -141,6 +169,8 @@ def _clean_title_line(line: str) -> str:
 
 def _is_title_candidate(line: str) -> bool:
     if not line or not line.isupper() or len(line) <= 8:
+        return False
+    if _looks_garbled(line):
         return False
     if "IAEA" in line or "SERIES" in line:
         return False
@@ -153,6 +183,88 @@ def _is_title_candidate(line: str) -> bool:
     if re.match(r"^VIENNA,\s*\d{4}$", line):
         return False
     return True
+
+
+def _looks_like_generic_category_page(lines: list[str]) -> bool:
+    cleaned = [_clean_title_line(line).lower() for line in lines if line.strip()]
+    if any("categories in the iaea nuclear security series" in line for line in cleaned):
+        return True
+
+    category_lines = {
+        "nuclear security fundamentals",
+        "nuclear security recommendations",
+        "implementing guide",
+        "implementing guides",
+        "technical guidance",
+        "safety fundamentals",
+        "safety requirements",
+        "safety guides",
+    }
+    matches = [line for line in cleaned if line in category_lines]
+    return len(matches) >= 3
+
+
+def _is_usable_title(title: str) -> bool:
+    title = _clean_title_line(title)
+    if not title:
+        return False
+    if _looks_garbled(title):
+        return False
+
+    low = title.lower()
+    category_phrases = [
+        "nuclear security fundamentals",
+        "nuclear security recommendations",
+        "implementing guide",
+        "implementing guides",
+        "technical guidance",
+        "safety fundamentals",
+        "safety requirements",
+        "safety guides",
+    ]
+    phrase_hits = sum(1 for phrase in category_phrases if phrase in low)
+    if phrase_hits >= 3:
+        return False
+    return True
+
+
+def _looks_garbled(text: str) -> bool:
+    if re.search(r"[\x00-\x08\x0b-\x1f]", text):
+        return True
+    if "\\" in text:
+        return True
+    if re.search(r"[\$,][A-Z]{2,}|[0-9][A-Za-z]{2,}[0-9]|[A-Za-z]{2,}[0-9][A-Za-z]{2,}", text):
+        return True
+    letters = [ch for ch in text if ch.isalpha()]
+    if letters:
+        digit_ratio = sum(1 for ch in text if ch.isdigit()) / max(len(text), 1)
+        if digit_ratio > 0.18:
+            return True
+    return False
+
+
+def _infer_title_from_filename(pdf_path: Path) -> str:
+    stem = re.sub(r"\s+", " ", pdf_path.stem.replace("_", " ")).strip()
+    prefix_patterns = [
+        r"^NSS\s+\d+\s*[-‑–—]\s*[GT](?:\s*\(Rev\.?\s*\d+\))?\s+",
+        r"^NSS\s+\d+(?:\s*\(Rev\.?\s*\d+\))?\s+",
+        r"^GSR\s+Part\s+\d+(?:\s*\(Rev\.?\s*\d+\))?\s+",
+        r"^SSR[-\s]*\d+(?:\.\d+)?(?:[-/]\d+)?(?:\s*\(Rev\.?\s*\d+\))?\s+",
+        r"^(?:GS-G|GSG|SSG|SF|RS-G|WS-G|NS-G|TS-G)[-\s]*[\d.]+(?:\s*\(Rev\.?\s*\d+\))?\s+",
+    ]
+    for pattern in prefix_patterns:
+        updated = re.sub(pattern, "", stem, flags=re.I).strip()
+        if updated != stem:
+            stem = updated
+            break
+    return _title_case(stem)
+
+
+def _title_case(text: str) -> str:
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+        return ""
+    return text.title().replace("’S", "’s").replace("'S", "'s")
 
 
 def _infer_series_name(text: str) -> str:

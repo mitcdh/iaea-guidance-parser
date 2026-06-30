@@ -1,7 +1,6 @@
 # Source PDF corpora and generated parser outputs
-Safety/
-Security/
 outputs/
+inputs/
 
 # Python virtual environments
 .venv/

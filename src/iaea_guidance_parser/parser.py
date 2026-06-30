@@ -43,6 +43,8 @@ class IAEAGuidanceParser:
         self.current_subheading: str | None = None
         self.current_annex: str | None = None
         self.current_para_id: str | None = None
+        self.body_started = False
+        self.in_contents = False
 
     @classmethod
     def from_pdf(cls, pdf_path: Path, config_path: Path | None = None) -> "IAEAGuidanceParser":
@@ -66,6 +68,9 @@ class IAEAGuidanceParser:
                 line = normalize_text(raw_line)
                 if not line or self._skip_line(line):
                     continue
+
+                if CONTENTS_HEADING_RE.match(line):
+                    self.in_contents = True
 
                 # Region transition headings always terminate active prose/table elements.
                 region_transition = self._detect_region_transition(line)
@@ -162,21 +167,21 @@ class IAEAGuidanceParser:
                     continue
 
                 major_heading_match = MAJOR_BODY_HEADING_RE.match(line)
-                if major_heading_match and not self._is_contents_entry(line):
+                if major_heading_match and self._should_treat_as_body_heading(line, major_heading_match, page):
                     # Major numbered section heading such as "1. INTRODUCTION".
                     self._flush(active)
-                    self.region = "Body"
+                    self._enter_body()
                     self.current_major_heading = re.sub(r"\s+", " ", line).strip()
                     self.current_subheading = None
                     self._add_heading(line, page)
                     continue
 
                 para_match = self._paragraph_match(line)
-                if para_match:
+                if para_match and not self._is_contents_noise(line, page):
                     self._flush(active)
                     para_id = canonical_dash(para_match.group("id"))
-                    if self._is_body_paragraph_id(para_id) and self.region in {"FrontMatter", "BackMatter"}:
-                        self.region = "Body"
+                    if self._should_enter_body_for_paragraph(para_id, page):
+                        self._enter_body()
                         self.current_major_heading = _fallback_body_heading(para_id)
                         self.current_subheading = None
                     self.current_para_id = para_id
@@ -229,6 +234,8 @@ class IAEAGuidanceParser:
         return False
 
     def _detect_region_transition(self, line: str) -> str | None:
+        if not self.body_started and self.region == "FrontMatter":
+            return None
         if APPENDIX_HEADING_RE.match(line):
             return "Appendix"
         if REFERENCES_HEADING_RE.match(line):
@@ -265,14 +272,49 @@ class IAEAGuidanceParser:
             or self._detect_region_transition(line)
         )
 
+    def _should_treat_as_body_heading(self, line: str, match, page: PageText) -> bool:
+        if self._is_contents_noise(line, page):
+            return False
+        para_match = BODY_PARA_RE.match(line)
+        if para_match and re.match(r"^\d{3}(?:\.\d+)?$", para_match.group("id")):
+            return False
+        if self.region == "Body":
+            return True
+        if self.region not in {"FrontMatter", "BackMatter"}:
+            return False
+        num = match.group("num")
+        title = re.sub(r"\s+", " ", match.group("title")).strip().upper()
+        # The front matter often contains numbered catalogue or series-structure
+        # entries. Only the actual first publication section should open Body.
+        return num == "1" and title.startswith("INTRODUCTION")
+
+    def _should_enter_body_for_paragraph(self, para_id: str, page: PageText) -> bool:
+        if not self._is_body_paragraph_id(para_id):
+            return False
+        if self.region not in {"FrontMatter", "BackMatter"}:
+            return False
+        # A real publication body normally starts at para. 1.1. Later numbered
+        # entries before that point are usually front-matter series overviews.
+        if para_id.startswith("1."):
+            return True
+        return bool(page.printed_page and re.match(r"^\d{3}(?:\.\d+)?$", para_id))
+
+    def _enter_body(self) -> None:
+        self.region = "Body"
+        self.body_started = True
+        self.in_contents = False
+
     def _paragraph_match(self, line: str):
         return BODY_PARA_RE.match(line) or APPENDIX_PARA_RE.match(line) or ANNEX_PARA_RE.match(line)
 
     def _is_body_paragraph_id(self, para_id: str) -> bool:
-        return bool(re.match(r"^\d+\.\d+$", para_id))
+        return bool(re.match(r"^(?:\d+\.\d+|\d{3}(?:\.\d+)?)$", para_id))
 
     def _is_contents_entry(self, line: str) -> bool:
         return ". . ." in line or bool(re.search(r"\.{3,}", line))
+
+    def _is_contents_noise(self, line: str, page: PageText) -> bool:
+        return self._is_contents_entry(line) or (self.in_contents and page.printed_page is None)
 
     def _footnote_match(self, line: str):
         m = FOOTNOTE_RE.match(line)
@@ -440,7 +482,7 @@ def classify_status(
                 "Informational",
                 "SPESS C: Section 1 introduces the publication and sets context, purpose, scope and structure; it should not contain requirements, recommendations or guidance.",
             )
-        if element_type in {"paragraph", "figure", "table"}:
+        if element_type in {"paragraph", "figure", "table", "text_block"}:
             return (
                 "Normative",
                 "SPESS C: Numbered main-text sections from Section 2 onward present the primary technical content of the safety standard or nuclear security guidance publication.",
@@ -450,7 +492,7 @@ def classify_status(
             "SPESS C: Headings structure the main text; requirements, recommendations or guidance are carried by numbered technical content, not heading text alone.",
         )
     if source_region == "Appendix":
-        if element_type in {"paragraph", "figure", "table"}:
+        if element_type in {"paragraph", "figure", "table", "text_block"}:
             return (
                 "Normative",
                 "SPESS C: An appendix is an integral part of the standard or guidance and has the same status as the main text.",
@@ -460,7 +502,7 @@ def classify_status(
             "SPESS C: Appendix headings structure integral appendix material; the appendix content itself has the same status as the main text.",
         )
     if source_region == "Annex":
-        if element_type in {"paragraph", "figure", "table"}:
+        if element_type in {"paragraph", "figure", "table", "text_block"}:
             return (
                 "Informative",
                 "SPESS C: Annexes provide practical examples or additional information/explanation; they are not integral and should not contain requirements, recommendations or guidance.",
@@ -477,6 +519,8 @@ def classify_status(
 
 def _is_section_one(element_id: str | None, section_path: list[str]) -> bool:
     if element_id and element_id.startswith("1."):
+        return True
+    if element_id and re.match(r"^1\d{2}(?:\.\d+)?$", element_id):
         return True
     return bool(section_path and section_path[0].startswith("1."))
 
