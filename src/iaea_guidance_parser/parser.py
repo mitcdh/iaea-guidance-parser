@@ -161,10 +161,24 @@ class IAEAGuidanceParser:
                     )
                     continue
 
+                major_heading_match = MAJOR_BODY_HEADING_RE.match(line)
+                if major_heading_match and not self._is_contents_entry(line):
+                    # Major numbered section heading such as "1. INTRODUCTION".
+                    self._flush(active)
+                    self.region = "Body"
+                    self.current_major_heading = re.sub(r"\s+", " ", line).strip()
+                    self.current_subheading = None
+                    self._add_heading(line, page)
+                    continue
+
                 para_match = self._paragraph_match(line)
                 if para_match:
                     self._flush(active)
                     para_id = canonical_dash(para_match.group("id"))
+                    if self._is_body_paragraph_id(para_id) and self.region in {"FrontMatter", "BackMatter"}:
+                        self.region = "Body"
+                        self.current_major_heading = _fallback_body_heading(para_id)
+                        self.current_subheading = None
                     self.current_para_id = para_id
                     active.start(
                         kind="paragraph",
@@ -173,16 +187,6 @@ class IAEAGuidanceParser:
                         page=page,
                         section_path=self._section_path(),
                     )
-                    continue
-
-                major_heading_match = MAJOR_BODY_HEADING_RE.match(line)
-                if major_heading_match and (self.region == "Body" or page.printed_page is not None):
-                    # Major numbered section heading such as "1. INTRODUCTION".
-                    self._flush(active)
-                    self.region = "Body"
-                    self.current_major_heading = re.sub(r"\s+", " ", line).strip()
-                    self.current_subheading = None
-                    self._add_heading(line, page)
                     continue
 
                 if self._is_heading_line(line) or (is_all_caps_heading(line) and self.region in {"Body", "Appendix", "Annex"}):
@@ -234,7 +238,9 @@ class IAEAGuidanceParser:
         if GLOSSARY_HEADING_RE.match(line):
             return "Glossary"
         if RELATED_PUBLICATIONS_RE.match(line):
-            return "BackMatter"
+            if self.region != "FrontMatter":
+                return "BackMatter"
+            return None
         return None
 
     def _apply_region_transition(self, new_region: str, line: str, page: PageText) -> None:
@@ -261,6 +267,12 @@ class IAEAGuidanceParser:
 
     def _paragraph_match(self, line: str):
         return BODY_PARA_RE.match(line) or APPENDIX_PARA_RE.match(line) or ANNEX_PARA_RE.match(line)
+
+    def _is_body_paragraph_id(self, para_id: str) -> bool:
+        return bool(re.match(r"^\d+\.\d+$", para_id))
+
+    def _is_contents_entry(self, line: str) -> bool:
+        return ". . ." in line or bool(re.search(r"\.{3,}", line))
 
     def _footnote_match(self, line: str):
         m = FOOTNOTE_RE.match(line)
@@ -467,6 +479,13 @@ def _is_section_one(element_id: str | None, section_path: list[str]) -> bool:
     if element_id and element_id.startswith("1."):
         return True
     return bool(section_path and section_path[0].startswith("1."))
+
+
+def _fallback_body_heading(element_id: str) -> str:
+    section = element_id.split(".", 1)[0]
+    if section == "1":
+        return "1. INTRODUCTION"
+    return f"{section}. SECTION {section}"
 
 
 class _ActiveElement:

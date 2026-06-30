@@ -151,7 +151,7 @@ Each single-document run writes:
 
 - `metadata.json` — document-level metadata, including document family/category/type.
 - `structural_index.jsonl` — one record per paragraph, figure, table, footnote, heading, reference or text block.
-- `custom_gpt_knowledge.jsonl` — JSONL chunks suitable for uploading as Knowledge.
+- `custom_gpt_knowledge.jsonl` — structured chunks for scripts, API workflows or custom retrieval systems.
 - `custom_gpt_knowledge.md` — a text-forward Knowledge file for Custom GPT upload.
 - `structural_index_preview.csv` — spreadsheet-friendly preview.
 - `qa_report.md` — element counts and basic validation checks.
@@ -161,12 +161,44 @@ Each single-document run writes:
 A series run writes all of the single-document outputs for each PDF, plus these combined outputs:
 
 - `series_structural_index.jsonl` — combined structural index across all parsed PDFs.
-- `series_custom_gpt_knowledge.jsonl` — combined Custom GPT input across all parsed PDFs.
-- `series_custom_gpt_knowledge.md` — text-forward combined Custom GPT input.
+- `series_custom_gpt_knowledge.jsonl` — structured combined chunks for scripts, API workflows or custom retrieval systems.
+- `series_custom_gpt_knowledge.md` — compact, text-forward combined Custom GPT input retained for local use and archival.
+- `series_custom_gpt_knowledge_parts/part_*.md` — compact upload-sized Markdown parts for Custom GPT Knowledge.
 - `series_manifest.json` — document inventory, metadata, SHA-256 hashes, element counts and failures.
 - `series_manifest.csv` — spreadsheet-friendly series inventory.
 - `series_qa_report.md` — aggregate QA report and document-type checks.
 - `series_config_effective.json` — the series config used for the run.
+
+## Uploading to a Custom GPT
+
+For a Custom GPT, upload the numbered Markdown files in the relevant parts directory:
+
+```text
+outputs/Security/series_custom_gpt_knowledge_parts/part_*.md
+outputs/Safety/series_custom_gpt_knowledge_parts/part_*.md
+```
+
+Use the Security parts for a Security GPT and the Safety parts for a Safety GPT. Upload all numbered parts for that series to the same GPT.
+
+The unsplit `series_custom_gpt_knowledge.md` is still written because it is convenient for local search, review and archival use. It may be rejected by the Custom GPT builder with a message such as "This file contains too much text content" because the builder applies an extracted-text/indexing limit separately from ordinary file size.
+
+The Markdown Knowledge files use compact per-record fields to reduce upload size. Each file/part includes a status and region legend, so repeated SPESS C status reasons are not written on every paragraph. Full record metadata and status reasons remain available in `series_structural_index.jsonl`.
+
+The manifest and QA report are optional. Upload them only if you want the GPT to answer coverage or parser-quality questions such as which publications were included, whether any PDFs failed, or how the records were categorized.
+
+Suggested Custom GPT descriptions:
+
+```text
+IAEA Nuclear Security Series Assistant
+
+Unofficial assistant for searching and summarizing uploaded IAEA Nuclear Security Series publications. Not affiliated with, endorsed by, or a substitute for the International Atomic Energy Agency or official IAEA publications.
+```
+
+```text
+IAEA Nuclear Safety Standards Assistant
+
+Unofficial assistant for searching and summarizing uploaded IAEA Safety Standards Series publications. Not affiliated with, endorsed by, or a substitute for the International Atomic Energy Agency or official IAEA publications.
+```
 
 Every combined record preserves the document identity and type:
 

@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 
 from .models import DocumentMetadata, PageText
-from .rules import KNOWN_DOCUMENT_CATEGORIES, canonical_dash, slugify_category
+from .rules import KNOWN_DOCUMENT_CATEGORIES, KNOWN_PUBLICATION_HEADINGS, canonical_dash, slugify_category
 
 
 DOCUMENT_CATEGORY_ALIASES = {
@@ -69,7 +69,7 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
     first_text = "\n".join(p.text for p in pages[:10])
     all_text = "\n".join(p.text for p in pages[:20])
 
-    title = cfg_doc.get("title") or _infer_title(first_text) or cfg_fallback.get("title", "")
+    title = cfg_doc.get("title") or _infer_title(first_text, pages[:10]) or cfg_fallback.get("title", "")
     inferred_series_name = _infer_series_name(first_text)
     series_name = cfg_doc.get("series_name") or inferred_series_name or cfg_fallback.get("series_name", "")
     series_number = cfg_doc.get("series_number") or _infer_series_number(first_text) or cfg_fallback.get("series_number", "")
@@ -118,22 +118,56 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
     )
 
 
-def _infer_title(text: str) -> str:
+def _infer_title(text: str, pages: list[PageText] | None = None) -> str:
     # Title page usually presents title as 2-4 lines after category.
     if "COMPUTER SECURITY" in text and "NUCLEAR FACILITIES" in text:
         return "Computer Security Techniques for Nuclear Facilities"
+    if pages:
+        for page in pages:
+            candidates = [_clean_title_line(line) for line in page.lines]
+            candidates = [line for line in candidates if _is_title_candidate(line)]
+            # Skip member-state lists and other dense all-caps catalogue pages.
+            if 2 <= len(candidates) <= 8:
+                return " ".join(candidates).title()
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    candidates = [line for line in lines if line.isupper() and len(line) > 8 and "IAEA" not in line and "SERIES" not in line]
-    return " ".join(candidates[:3]).title() if candidates else ""
+    candidates = [_clean_title_line(line) for line in lines]
+    candidates = [line for line in candidates if _is_title_candidate(line)]
+    return " ".join(candidates[:5]).title() if candidates else ""
+
+
+def _clean_title_line(line: str) -> str:
+    return re.sub(r"\s+", " ", line).strip().strip(" .")
+
+
+def _is_title_candidate(line: str) -> bool:
+    if not line or not line.isupper() or len(line) <= 8:
+        return False
+    if "IAEA" in line or "SERIES" in line:
+        return False
+    if line in KNOWN_PUBLICATION_HEADINGS:
+        return False
+    if line == "RELATED PUBLICATIONS" or line.endswith("RELATED PUBLICATIONS"):
+        return False
+    if line.startswith(("JOINTLY SPONSORED", "INTERNATIONAL ", "UNITED NATIONS", "EUROPEAN ")):
+        return False
+    if re.match(r"^VIENNA,\s*\d{4}$", line):
+        return False
+    return True
 
 
 def _infer_series_name(text: str) -> str:
-    if re.search(r"IAEA\s+Nuclear\s+Security\s+Series|NUCLEAR SECURITY SERIES", text, flags=re.I):
-        return "IAEA Nuclear Security Series"
-    if re.search(r"IAEA\s+Safety\s+Standards\s+Series|SAFETY STANDARDS SERIES", text, flags=re.I):
-        return "IAEA Safety Standards Series"
-    if re.search(r"IAEA\s+Safety\s+Series|SAFETY SERIES", text, flags=re.I):
-        return "IAEA Safety Series"
+    matches = []
+    patterns = [
+        ("IAEA Nuclear Security Series", r"IAEA\s+Nuclear\s+Security\s+Series|NUCLEAR SECURITY SERIES"),
+        ("IAEA Safety Standards Series", r"IAEA\s+Safety\s+Standards(?:\s+Series)?|SAFETY STANDARDS(?: SERIES)?"),
+        ("IAEA Safety Series", r"IAEA\s+Safety\s+Series|SAFETY SERIES"),
+    ]
+    for label, pattern in patterns:
+        match = re.search(pattern, text, flags=re.I)
+        if match:
+            matches.append((match.start(), label))
+    if matches:
+        return sorted(matches)[0][1]
     return ""
 
 

@@ -55,6 +55,7 @@ KNOWN_PUBLICATION_HEADINGS = {
     "EDITORAL NOTE",
     "EDITORIAL NOTE",
     "CONTENTS",
+    "RELATED PUBLICATIONS",
     "ORDERING LOCALLY",
 }
 
@@ -71,8 +72,8 @@ def normalize_text(s: str) -> str:
     }
     for a, b in replacements.items():
         s = s.replace(a, b)
-    # Keep en dashes and non-breaking hyphens; collapse only ordinary whitespace.
-    s = re.sub(r"[ \r\f\v]+", " ", s)
+    # Keep en dashes and non-breaking hyphens; collapse other horizontal Unicode whitespace.
+    s = re.sub(r"[^\S\n]+", " ", s)
     return s.strip()
 
 

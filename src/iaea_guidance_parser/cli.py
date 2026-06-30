@@ -124,4 +124,8 @@ def parse_series(
     table.add_row("Structural records", str(sum(len(r.records) for r in results)))
     console.print(table)
     console.print(f"[green]Combined outputs written to {out}[/green]")
-    console.print("Key combined outputs: series_structural_index.jsonl, series_custom_gpt_knowledge.jsonl, series_custom_gpt_knowledge.md, series_manifest.csv, series_qa_report.md")
+    console.print(
+        "Key combined outputs: series_structural_index.jsonl, series_custom_gpt_knowledge.jsonl, "
+        "series_custom_gpt_knowledge.md, series_custom_gpt_knowledge_parts/, series_manifest.csv, "
+        "series_qa_report.md"
+    )

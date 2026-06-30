@@ -1,6 +1,10 @@
+from types import SimpleNamespace
+
+from iaea_guidance_parser.exporters import write_series_markdown_knowledge_parts
 from iaea_guidance_parser.models import PageText
+from iaea_guidance_parser.models import DocumentMetadata, StructuralElement
 from iaea_guidance_parser.metadata import deep_merge, infer_metadata
-from iaea_guidance_parser.parser import classify_status
+from iaea_guidance_parser.parser import IAEAGuidanceParser, classify_status
 from iaea_guidance_parser.rules import (
     ANNEX_PARA_RE,
     APPENDIX_PARA_RE,
@@ -157,6 +161,83 @@ def test_declared_and_prefix_safety_categories_are_preserved(tmp_path):
     assert old_guide.document_type == "safety_guide"
 
 
+def test_title_inference_ignores_generic_front_matter_headings(tmp_path):
+    security_pdf = tmp_path / "NSS 15.pdf"
+    security_pdf.write_bytes(b"not a real pdf")
+    security_metadata = infer_metadata(
+        security_pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text="CATEGORIES IN THE IAEA NUCLEAR SECURITY SERIES\nDRAFTING AND REVIEW",
+                lines=["CATEGORIES IN THE IAEA NUCLEAR SECURITY SERIES", "DRAFTING AND REVIEW"],
+            ),
+            PageText(
+                pdf_page=2,
+                printed_page=None,
+                text="\n".join(
+                    [
+                        "NUCLEAR SECURITY",
+                        "RECOMMENDATIONS",
+                        "ON NUCLEAR AND OTHER",
+                        "RADIOACTIVE MATERIAL",
+                        "OUT OF REGULATORY CONTROL",
+                    ]
+                ),
+                lines=[
+                    "NUCLEAR SECURITY",
+                    "RECOMMENDATIONS",
+                    "ON NUCLEAR AND OTHER",
+                    "RADIOACTIVE MATERIAL",
+                    "OUT OF REGULATORY CONTROL",
+                ],
+            ),
+        ],
+        {"document": {"series_name": "IAEA Nuclear Security Series", "document_domain": "nuclear_security"}},
+    )
+    assert security_metadata.title == "Nuclear Security Recommendations On Nuclear And Other Radioactive Material Out Of Regulatory Control"
+
+    safety_pdf = tmp_path / "GSR Part 1.pdf"
+    safety_pdf.write_bytes(b"not a real pdf")
+    safety_metadata = infer_metadata(
+        safety_pdf,
+        [
+            PageText(
+                pdf_page=1,
+                printed_page=None,
+                text="IAEA SAFETY STANDARDS AND RELATED PUBLICATIONS\nRELATED PUBLICATIONS\nSecurity related publications are issued in the IAEA Nuclear Security Series.",
+                lines=[
+                    "IAEA SAFETY STANDARDS AND RELATED PUBLICATIONS",
+                    "RELATED PUBLICATIONS",
+                    "Security related publications are issued in the IAEA Nuclear Security Series.",
+                ],
+            ),
+            PageText(
+                pdf_page=2,
+                printed_page=None,
+                text="GOVERNMENTAL, LEGAL\nAND REGULATORY\nFRAMEWORK FOR SAFETY",
+                lines=["GOVERNMENTAL, LEGAL", "AND REGULATORY", "FRAMEWORK FOR SAFETY"],
+            ),
+        ],
+        {"document": {"series_name": "IAEA Safety Standards Series", "document_domain": "nuclear_safety"}},
+    )
+    assert safety_metadata.title == "Governmental, Legal And Regulatory Framework For Safety"
+
+    inferred_safety_metadata = infer_metadata(safety_pdf, [
+        PageText(
+            pdf_page=1,
+            printed_page=None,
+            text="IAEA SAFETY STANDARDS AND RELATED PUBLICATIONS\nSecurity related publications are issued in the IAEA Nuclear Security Series.",
+            lines=[
+                "IAEA SAFETY STANDARDS AND RELATED PUBLICATIONS",
+                "Security related publications are issued in the IAEA Nuclear Security Series.",
+            ],
+        )
+    ], {})
+    assert inferred_safety_metadata.series_name == "IAEA Safety Standards Series"
+
+
 def test_nuclear_security_suffix_type_inference(tmp_path):
     guidance_pdf = tmp_path / "NSS 46-T Security of Nuclear Material in Transport.pdf"
     guidance_pdf.write_bytes(b"not a real pdf")
@@ -236,3 +317,153 @@ def test_status_classification_uses_spess_c_structure():
     )
     assert annex_status == "Informative"
     assert "not integral" in annex_reason
+
+
+def test_parser_enters_body_without_printed_page_number():
+    metadata = DocumentMetadata(
+        document_id="NSS-15",
+        source_file="NSS-15.pdf",
+        source_sha256="abc123",
+        title="Nuclear Security Recommendations",
+        series_name="IAEA Nuclear Security Series",
+        series_number="No. 15",
+        document_family="IAEA Nuclear Security Series",
+        document_category="Nuclear Security Recommendations",
+        document_type="nuclear_security_recommendations",
+        document_domain="nuclear_security",
+    )
+    parser = IAEAGuidanceParser(
+        metadata,
+        [
+            PageText(
+                pdf_page=11,
+                printed_page=None,
+                text="",
+                lines=[
+                    "1. INTRODUCTION",
+                    "BACKGROUND",
+                    "1.1. Introductory context.",
+                    "2. OBJECTIVES",
+                    "2.1. The State should establish nuclear security objectives.",
+                ],
+            )
+        ],
+        include_text_blocks=True,
+    )
+
+    _, records = parser.parse()
+    paragraphs = {record.element_id: record for record in records if record.element_type == "paragraph"}
+    assert paragraphs["1.1"].source_region == "Body"
+    assert paragraphs["1.1"].text_status == "Informational"
+    assert paragraphs["1.1"].section_path == ["1. INTRODUCTION", "BACKGROUND"]
+    assert paragraphs["2.1"].source_region == "Body"
+    assert paragraphs["2.1"].text_status == "Normative"
+    assert paragraphs["2.1"].section_path == ["2. OBJECTIVES"]
+
+
+def test_front_matter_related_publications_does_not_force_backmatter():
+    metadata = DocumentMetadata(
+        document_id="GSR-PART-1-REV1",
+        source_file="GSR.pdf",
+        source_sha256="abc123",
+        title="Governmental, Legal and Regulatory Framework for Safety",
+        series_name="IAEA Safety Standards Series",
+        series_number="No. GSR Part 1 (Rev. 1)",
+        document_family="IAEA Safety Standards Series",
+        document_category="General Safety Requirements",
+        document_type="general_safety_requirements",
+        document_domain="nuclear_safety",
+    )
+    parser = IAEAGuidanceParser(
+        metadata,
+        [
+            PageText(
+                pdf_page=2,
+                printed_page=None,
+                text="",
+                lines=[
+                    "IAEA SAFETY STANDARDS",
+                    "RELATED PUBLICATIONS",
+                    "Safety related publications are also issued separately.",
+                ],
+            ),
+            PageText(
+                pdf_page=23,
+                printed_page=None,
+                text="",
+                lines=[
+                    "1. INTRODUCTION",
+                    "1.1. Introductory safety context.",
+                    "2. RESPONSIBILITIES AND FUNCTIONS OF THE GOVERNMENT",
+                    "2.1. The government shall establish a national policy and strategy for safety.",
+                ],
+            ),
+        ],
+        include_text_blocks=True,
+    )
+
+    _, records = parser.parse()
+    related_heading = next(record for record in records if record.text == "RELATED PUBLICATIONS")
+    paragraphs = {record.element_id: record for record in records if record.element_type == "paragraph"}
+    assert related_heading.source_region == "FrontMatter"
+    assert paragraphs["2.1"].source_region == "Body"
+    assert paragraphs["2.1"].text_status == "Normative"
+
+
+def test_series_markdown_knowledge_parts_split_on_record_boundaries(tmp_path):
+    metadata = DocumentMetadata(
+        document_id="TEST-1",
+        source_file="TEST-1.pdf",
+        source_sha256="abc123",
+        title="Test Publication",
+        series_name="IAEA Test Series",
+        series_number="No. TEST-1",
+        document_family="IAEA Test Series",
+        document_category="Specific Safety Guide",
+        document_type="specific_safety_guide",
+        document_domain="nuclear_safety",
+    )
+    records = [
+        StructuralElement(
+            record_id=f"TEST-1-{i}",
+            document_id="TEST-1",
+            document_title="Test Publication",
+            document_family="IAEA Test Series",
+            document_category="Specific Safety Guide",
+            document_type="specific_safety_guide",
+            document_domain="nuclear_safety",
+            series_name="IAEA Test Series",
+            series_number="No. TEST-1",
+            element_type="paragraph",
+            element_id=f"2.{i}",
+            source_region="Body",
+            text_status="Normative",
+            status_reason="Body Section 2+ paragraph.",
+            section_path=["2. TEST SECTION"],
+            page_start_pdf=i,
+            page_end_pdf=i,
+            page_start_printed=None,
+            page_end_printed=None,
+            text="This is test guidance content. " + ("x" * 500),
+        )
+        for i in range(1, 6)
+    ]
+    result = SimpleNamespace(metadata=metadata, records=records)
+
+    write_series_markdown_knowledge_parts(
+        tmp_path,
+        {"series": {"series_id": "Safety", "series_name": "IAEA Test Series"}},
+        [result],
+        max_bytes=2_000,
+    )
+
+    part_files = sorted(tmp_path.glob("part_*.md"))
+    assert len(part_files) > 1
+    assert (tmp_path / "README.md").exists()
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in part_files)
+    assert "Upload all numbered parts for this series to the same Custom GPT." in combined
+    assert "## Status and region legend" in combined
+    assert "Document: TEST-1 (continued)" in combined
+    assert "Status basis:" not in combined
+    for record in records:
+        assert f"record: paragraph {record.element_id}" in combined
