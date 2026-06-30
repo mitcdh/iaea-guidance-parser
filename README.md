@@ -1,190 +1,127 @@
-# IAEA guidance parser
+# IAEA Guidance Parser
 
-This Python environment precomputes structural indexes and Custom GPT knowledge input for IAEA guidance PDFs. It is designed for two broad IAEA runs: Safety and Security.
+This project turns folders of IAEA PDF publications into files that are easier to search, review and upload to a Custom GPT or other LLM tool.
 
-The parser records document type in both outputs. For example, `document_category: Technical Guidance` and `document_type: technical_guidance` are included in `metadata.json`, every row of `structural_index.jsonl`, and every row/chunk in `custom_gpt_knowledge.jsonl` and `custom_gpt_knowledge.md`.
+It is designed for two separate runs:
 
-PDF text-extraction line wraps are repaired before parsing so paragraph text and GPT chunks do not retain line breaks introduced by PDF encoding.
+- `Security` — IAEA Nuclear Security Series publications.
+- `Safety` — IAEA Safety Standards Series publications.
 
-## Install
+The parser does not download PDFs. Put the PDFs in local folders, run the parser once for each folder, and it will create structured output files under `outputs/`.
 
-### Option A: venv + pip
+PDF extraction often adds artificial line breaks in the middle of sentences. This parser repairs those line breaks before writing the output, so the text is more suitable for search and Custom GPT knowledge files.
 
-```bash
-cd iaea-guidance-parser
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-pip install -e .
-```
+## What You Get
 
-### Option B: conda
+For each series, the parser creates:
 
-```bash
-cd iaea-guidance-parser
-conda env create -f environment.yml
-conda activate iaea-guidance-parser
-pip install -e .
-```
+- upload-ready Markdown parts for a Custom GPT;
+- a full structured index of every paragraph, table, figure caption, heading and reference;
+- a manifest showing which PDFs were included;
+- a QA report with parser counts and basic checks.
 
-## Parse a single document
-
-```bash
-iaea-guidance-parser parse /path/to/PUB1921_web.pdf \
-  --config configs/nss17t.yaml \
-  --out outputs/NSS-17-T-REV1
-```
-
-Equivalent module form:
-
-```bash
-python -m iaea-guidance-parser parse /path/to/PUB1921_web.pdf \
-  --config configs/nss17t.yaml \
-  --out outputs/NSS-17-T-REV1
-```
-
-## Parse a whole Safety or Security directory
-
-Use the `series` command once for the Security folder and once for the Safety folder. Each run writes one combined output set for that folder.
-
-```bash
-iaea-guidance-parser series /path/to/Security \
-  --series-config configs/nuclear_security_series.yaml \
-  --out outputs/Security
-
-iaea-guidance-parser series /path/to/Safety \
-  --series-config configs/nuclear_safety_series.yaml \
-  --out outputs/Safety
-```
-
-This writes per-document outputs under `outputs/<Safety-or-Security>/documents/<document_id>/` and combined series outputs at `outputs/Safety/` or `outputs/Security/`.
-
-Useful options:
-
-```bash
-# Search subdirectories, default behaviour
-iaea-guidance-parser series /path/to/pdfs --recursive
-
-# Only search the top-level directory
-iaea-guidance-parser series /path/to/pdfs --no-recursive
-
-# Restrict to a filename pattern
-iaea-guidance-parser series /path/to/pdfs --pattern 'PUB*.pdf'
-
-# Run only the first few PDFs as a test
-iaea-guidance-parser series /path/to/pdfs --limit 3
-
-# Stop on the first failed PDF instead of continuing
-iaea-guidance-parser series /path/to/pdfs --fail-fast
-
-# Add per-document YAML overrides keyed by PDF stem or filename
-iaea-guidance-parser series /path/to/pdfs \
-  --series-config configs/nuclear_security_series.yaml \
-  --config-dir configs/per_document \
-  --out outputs/Security
-```
-
-## Series-level configuration
-
-For the Security folder, use:
-
-```yaml
-series:
-  series_id: Security
-  series_name: IAEA Nuclear Security Series
-  document_family: IAEA Nuclear Security Series
-  document_domain: nuclear_security
-  publisher: International Atomic Energy Agency
-  publication_place: Vienna
-  language: en
-
-parser:
-  include_text_blocks: true
-
-fallbacks:
-  series_name: IAEA Nuclear Security Series
-  document_family: IAEA Nuclear Security Series
-  document_domain: nuclear_security
-```
-
-For the Safety folder, use:
-
-```yaml
-series:
-  series_id: Safety
-  series_name: IAEA Safety Standards Series
-  document_family: IAEA Safety Standards Series
-  document_domain: nuclear_safety
-
-fallbacks:
-  series_name: IAEA Safety Standards Series
-  document_family: IAEA Safety Standards Series
-  document_domain: nuclear_safety
-```
-
-Document category and type are normally inferred from each PDF cover/title page. This matters because each broad folder can contain different categories. Security categories include Nuclear Security Fundamentals, Nuclear Security Recommendations, Implementing Guides and Technical Guidance. Safety categories preserve declared categories such as Safety Fundamentals, General Safety Requirements, Specific Safety Requirements, General Safety Guide, Specific Safety Guide and older Safety Guide publications.
-
-Use `document_defaults` only when you want to force the same metadata value onto every PDF in the directory:
-
-```yaml
-document_defaults:
-  document_category: Technical Guidance
-  document_type: technical_guidance
-```
-
-Per-document overrides can be embedded in the series config:
-
-```yaml
-documents:
-  PUB1921_web.pdf:
-    document:
-      document_id: NSS-17-T-REV1
-      document_category: Technical Guidance
-      document_type: technical_guidance
-      document_subdomain: computer_security_for_nuclear_facilities
-```
-
-Or supplied as separate files under `--config-dir`, for example `configs/per_document/PUB1921_web.yaml`.
-
-## Outputs for a single document
-
-Each single-document run writes:
-
-- `metadata.json` — document-level metadata, including document family/category/type.
-- `structural_index.jsonl` — one record per paragraph, figure, table, footnote, heading, reference or text block.
-- `custom_gpt_knowledge.jsonl` — structured chunks for scripts, API workflows or custom retrieval systems.
-- `custom_gpt_knowledge.md` — a text-forward Knowledge file for Custom GPT upload.
-- `structural_index_preview.csv` — spreadsheet-friendly preview.
-- `qa_report.md` — element counts and basic validation checks.
-
-## Outputs for a series directory
-
-A series run writes all of the single-document outputs for each PDF, plus these combined outputs:
-
-- `series_structural_index.jsonl` — combined structural index across all parsed PDFs.
-- `series_custom_gpt_knowledge.jsonl` — structured combined chunks for scripts, API workflows or custom retrieval systems.
-- `series_custom_gpt_knowledge.md` — compact, text-forward combined Custom GPT input retained for local use and archival.
-- `series_custom_gpt_knowledge_parts/part_*.md` — compact upload-sized Markdown parts for Custom GPT Knowledge.
-- `series_manifest.json` — document inventory, metadata, SHA-256 hashes, element counts and failures.
-- `series_manifest.csv` — spreadsheet-friendly series inventory.
-- `series_qa_report.md` — aggregate QA report and document-type checks.
-- `series_config_effective.json` — the series config used for the run.
-
-## Uploading to a Custom GPT
-
-For a Custom GPT, upload the numbered Markdown files in the relevant parts directory:
+For most Custom GPT use, the important files are:
 
 ```text
 outputs/Security/series_custom_gpt_knowledge_parts/part_*.md
 outputs/Safety/series_custom_gpt_knowledge_parts/part_*.md
 ```
 
-Use the Security parts for a Security GPT and the Safety parts for a Safety GPT. Upload all numbered parts for that series to the same GPT.
+Upload all numbered parts for the one series you want the GPT to use.
 
-The unsplit `series_custom_gpt_knowledge.md` is still written because it is convenient for local search, review and archival use. It may be rejected by the Custom GPT builder with a message such as "This file contains too much text content" because the builder applies an extracted-text/indexing limit separately from ordinary file size.
+## Install
 
-The Markdown Knowledge files use compact per-record fields to reduce upload size. Each file/part includes a status and region legend, so repeated SPESS C status reasons are not written on every paragraph. Full record metadata and status reasons remain available in `series_structural_index.jsonl`.
+### Using venv and pip
 
-The manifest and QA report are optional. Upload them only if you want the GPT to answer coverage or parser-quality questions such as which publications were included, whether any PDFs failed, or how the records were categorized.
+```bash
+cd iaea-standard-parser
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+On Windows, activate the virtual environment with:
+
+```bash
+.venv\Scripts\activate
+```
+
+### Using conda
+
+```bash
+cd iaea-standard-parser
+conda env create -f environment.yml
+conda activate iaea-guidance-parser
+pip install -e .
+```
+
+## Run the Parser
+
+Run the parser once for Security and once for Safety.
+
+If your folders are named `Security` and `Safety` in this project directory, use:
+
+```bash
+iaea-guidance-parser series Security \
+  --series-config configs/nuclear_security_series.yaml \
+  --out outputs/Security
+
+iaea-guidance-parser series Safety \
+  --series-config configs/nuclear_safety_series.yaml \
+  --out outputs/Safety
+```
+
+If the command `iaea-guidance-parser` is not available, use the Python module form instead:
+
+```bash
+python -m iaea_guidance_parser series Security \
+  --series-config configs/nuclear_security_series.yaml \
+  --out outputs/Security
+```
+
+The parser writes one folder per document under:
+
+```text
+outputs/Security/documents/
+outputs/Safety/documents/
+```
+
+It also writes combined series files directly under:
+
+```text
+outputs/Security/
+outputs/Safety/
+```
+
+## Upload to a Custom GPT
+
+Create one GPT for Security and one GPT for Safety. Keep the two series separate unless you have a specific reason to combine them.
+
+For a Security GPT, upload:
+
+```text
+outputs/Security/series_custom_gpt_knowledge_parts/part_001_of_003.md
+outputs/Security/series_custom_gpt_knowledge_parts/part_002_of_003.md
+outputs/Security/series_custom_gpt_knowledge_parts/part_003_of_003.md
+```
+
+For a Safety GPT, upload:
+
+```text
+outputs/Safety/series_custom_gpt_knowledge_parts/part_001_of_010.md
+...
+outputs/Safety/series_custom_gpt_knowledge_parts/part_010_of_010.md
+```
+
+Do not upload the large unsplit `series_custom_gpt_knowledge.md` if the Custom GPT builder rejects it with:
+
+```text
+This file contains too much text content. Please try again with a smaller file.
+```
+
+Use the numbered files in `series_custom_gpt_knowledge_parts/` instead.
+
+The manifest and QA report are optional. Upload them only if you want the GPT to answer questions about coverage, provenance or parser quality, such as which publications were included or whether any PDFs failed. Do not treat those files as substantive IAEA guidance.
 
 Suggested Custom GPT descriptions:
 
@@ -200,63 +137,236 @@ IAEA Nuclear Safety Standards Assistant
 Unofficial assistant for searching and summarizing uploaded IAEA Safety Standards Series publications. Not affiliated with, endorsed by, or a substitute for the International Atomic Energy Agency or official IAEA publications.
 ```
 
-Every combined record preserves the document identity and type:
+### Custom GPT instructions
+
+Paste this into the Custom GPT `Instructions` field. Replace `[Safety/Security]` and the series name with the one you are building.
+
+```text
+You are an unofficial assistant for searching, summarizing and explaining uploaded IAEA [Safety/Security] publications.
+
+You are not affiliated with, endorsed by, or a substitute for the International Atomic Energy Agency or official IAEA publications. Always make clear that users should consult the official IAEA publication for authoritative wording and decisions.
+
+Use only the uploaded knowledge files as the source of substantive IAEA guidance. Do not invent guidance, requirements, recommendations, publication titles, paragraph numbers or citations that are not supported by the uploaded files.
+
+The uploaded knowledge files were generated from IAEA PDFs. They contain compact records with fields such as:
+- doc
+- record
+- status
+- region
+- pdf
+- section
+- text
+
+Interpret the fields as follows:
+- `doc` identifies the source publication.
+- `record` identifies the parsed item, such as a paragraph, table, figure caption, heading, reference or text block.
+- `status` gives the parser's normative status label.
+- `region` gives the source region of the publication.
+- `pdf` gives the physical PDF page number or page range.
+- `section` gives the section path when available.
+- `text` is the extracted publication text.
+
+Use the `status` field carefully:
+- `Normative` means main technical content, usually Section 2 onward, or appendix material.
+- `Informative` means supporting material such as annexes or footnotes.
+- `Informational` means front matter, references, glossary, headings, back matter or introductory material.
+
+The status labels are based on SPESS C structural guidance:
+- Section 1 introduces the publication and should not contain requirements, recommendations or guidance.
+- Numbered main-text sections from Section 2 onward present the primary technical content.
+- Appendices are integral and have the same status as the main text.
+- Annexes provide examples or additional information or explanation and are not integral.
+- Footnotes provide additional information or explanation and should not contain requirements, recommendations or guidance.
+
+When answering:
+- Prefer direct answers in plain language.
+- Cite the source publication, section or paragraph when available.
+- Include PDF page numbers when useful.
+- Distinguish clearly between requirements, recommendations, guidance, examples and background information when the uploaded records support that distinction.
+- If the answer depends on exact wording, quote only a short relevant excerpt and identify where it came from.
+- If the uploaded files do not contain enough information to answer, say so clearly.
+- If multiple publications are relevant, compare them and cite each one separately.
+- If the user asks for a list, checklist or summary, preserve the meaning of the source text and do not make it sound more mandatory than the source supports.
+- If the user asks a safety, security, legal, regulatory or compliance question, remind them to verify against the official IAEA publication and applicable national requirements.
+
+Use manifest and QA files only for coverage, provenance and parser-quality questions; do not treat them as substantive IAEA guidance.
+
+Do not rely on parser metadata alone when the publication text itself answers the question. Use metadata to identify documents, categories and provenance, not to replace substantive source text.
+
+Do not treat figure captions as the full content of a figure. The parser captures captions and page locations, not the visual diagram itself.
+
+Do not treat raw table text as perfectly reconstructed row and column data if the layout is ambiguous. Explain any uncertainty and point to the source page.
+
+Do not browse the web unless the user explicitly asks for information outside the uploaded files. If browsing or outside knowledge is used, clearly separate it from the uploaded IAEA material.
+
+Default answer style:
+- Start with the answer.
+- Then give supporting citations from the uploaded files.
+- Then add any caveats about status, scope or source limitations.
+```
+
+## Output Files Explained
+
+### Combined series outputs
+
+These are the files you will usually care about after a full Safety or Security run:
+
+| File | What it is for |
+| --- | --- |
+| `series_custom_gpt_knowledge_parts/part_*.md` | Upload these numbered Markdown files to a Custom GPT. |
+| `series_custom_gpt_knowledge.md` | One large local reference file. Useful for review, but often too large for Custom GPT upload. |
+| `series_structural_index.jsonl` | Full structured record of the parsed series. Best for scripts, data analysis and detailed checking. |
+| `series_manifest.json` | Inventory of parsed PDFs, metadata, hashes, counts and failures. |
+| `series_manifest.csv` | Spreadsheet-friendly version of the manifest. |
+| `series_qa_report.md` | Human-readable parser QA summary. |
+| `series_config_effective.json` | The configuration used for the run. |
+
+### Per-document outputs
+
+Each PDF also gets its own output folder with:
+
+| File | What it is for |
+| --- | --- |
+| `metadata.json` | Metadata for that publication. |
+| `structural_index.jsonl` | Paragraphs, tables, figure captions, references and headings for that document. |
+| `custom_gpt_knowledge.md` | Markdown knowledge text for that document only. |
+| `custom_gpt_knowledge.jsonl` | Structured knowledge chunks for technical workflows. |
+| `structural_index_preview.csv` | Spreadsheet preview. |
+| `qa_report.md` | Document-level parser summary. |
+
+## How the Parser Labels Content
+
+Each record is labelled with a source region and a text status.
+
+Source regions include:
+
+- `FrontMatter`
+- `Body`
+- `Appendix`
+- `Annex`
+- `References`
+- `Glossary`
+- `BackMatter`
+
+Text status values are:
+
+- `Normative` — main technical content, usually Section 2 onward, plus appendices.
+- `Informative` — supporting material such as annexes and footnotes.
+- `Informational` — front matter, references, headings, glossary and introductory material.
+
+The status rules are based on SPESS C:
+
+- Section 1 introduces the publication and is treated as informational.
+- Section 2 onward contains the primary technical content and is treated as normative.
+- Appendices are integral to the publication and have the same status as the main text.
+- Annexes provide examples or additional explanation and are informative.
+- Footnotes are informative.
+
+## Safety and Security Categories
+
+The parser keeps the declared publication category for each document.
+
+Security categories include:
+
+- Nuclear Security Fundamentals
+- Nuclear Security Recommendations
+- Implementing Guides
+- Technical Guidance
+
+Safety categories include:
+
+- Safety Fundamentals
+- General Safety Requirements
+- Specific Safety Requirements
+- General Safety Guide
+- Specific Safety Guide
+- older Safety Guide publications
+
+These categories appear in the structured outputs as fields such as:
 
 ```json
 {
-  "document_id": "NSS-17-T-REV1",
-  "document_family": "IAEA Nuclear Security Series",
   "document_category": "Technical Guidance",
   "document_type": "technical_guidance",
-  "document_domain": "nuclear_security",
-  "series_name": "IAEA Nuclear Security Series",
-  "series_number": "No. 17-T (Rev. 1)",
-  "element_type": "paragraph",
-  "element_id": "4.10",
-  "source_region": "Body",
-  "text_status": "Normative"
+  "document_domain": "nuclear_security"
 }
 ```
 
-## Classification rules
+## Run a Single PDF
 
-The default status rules follow the structure guidance in SPESS C:
+You normally do not need this for Custom GPT preparation, but it is useful for testing one document.
 
-- Section 1 body material is `Informational` because it introduces the publication and should not contain requirements, recommendations or guidance;
-- main body numbered paragraphs from Section 2 onward are `Normative` because they present the primary technical content;
-- appendix paragraphs are `Normative` because appendix material is integral and has the same status as the main text;
-- annex paragraphs are `Informative` because annexes provide examples or additional explanation and are not integral;
-- footnotes are always `Informative` because SPESS C treats them like annexes: additional information or explanation, not requirements/recommendations/guidance;
-- front matter, references, glossary, publication metadata and back matter are `Informational`;
-- figures and tables inherit the status of their region: Section 2+ body and appendix = normative structural elements, Section 1 and other informational regions = informational, annex = informative.
-
-## Structural record shape
-
-A paragraph record looks like:
-
-```json
-{
-  "document_id": "NSS-17-T-REV1",
-  "document_category": "Technical Guidance",
-  "document_type": "technical_guidance",
-  "element_type": "paragraph",
-  "element_id": "4.10",
-  "source_region": "Body",
-  "text_status": "Normative",
-  "section_path": ["4. FACILITY COMPUTER SECURITY RISK MANAGEMENT", "OUTLINE OF FACILITY COMPUTER SECURITY RISK MANAGEMENT"],
-  "page_start_pdf": 38,
-  "page_end_pdf": 39,
-  "text": "The following are the phases of facility CSRM: ..."
-}
+```bash
+iaea-guidance-parser parse /path/to/document.pdf \
+  --config configs/nss17t.yaml \
+  --out outputs/example-document
 ```
 
-## Known limitations
+Module form:
 
-This is a deterministic first pass. For high-assurance use, review:
+```bash
+python -m iaea_guidance_parser parse /path/to/document.pdf \
+  --config configs/nss17t.yaml \
+  --out outputs/example-document
+```
 
-- low-confidence footnote records;
-- complex tables that span multiple pages;
-- figure visual content, because the parser captures captions and page locations but does not interpret diagrams;
-- section headings split across multiple lines.
+## Configuration
 
-The parser deliberately preserves raw table text to avoid inventing row/column boundaries where the PDF extraction is ambiguous.
+The two main configuration files are:
+
+```text
+configs/nuclear_security_series.yaml
+configs/nuclear_safety_series.yaml
+```
+
+They set the broad series name and domain. The parser normally infers the individual publication type from each PDF.
+
+For example, the Security config says the folder belongs to the IAEA Nuclear Security Series:
+
+```yaml
+series:
+  series_id: Security
+  series_name: IAEA Nuclear Security Series
+  document_family: IAEA Nuclear Security Series
+  document_domain: nuclear_security
+
+parser:
+  include_text_blocks: true
+```
+
+The Safety config says the folder belongs to the IAEA Safety Standards Series:
+
+```yaml
+series:
+  series_id: Safety
+  series_name: IAEA Safety Standards Series
+  document_family: IAEA Safety Standards Series
+  document_domain: nuclear_safety
+
+parser:
+  include_text_blocks: true
+```
+
+Use per-document overrides only when the parser cannot infer a value correctly. For example:
+
+```yaml
+documents:
+  PUB1921_web.pdf:
+    document:
+      document_id: NSS-17-T-REV1
+      title: Computer Security Techniques for Nuclear Facilities
+      document_category: Technical Guidance
+      document_type: technical_guidance
+```
+
+## Known Limitations
+
+This is a deterministic parser, not a legal or technical reviewer. For high-assurance work, check the source PDF.
+
+Known limitations:
+
+- Complex tables are kept as raw PDF text. The parser does not invent row or column structure where the PDF is ambiguous.
+- Figure images are not extracted or interpreted. The parser captures figure captions and page locations.
+- Some section headings may be split across multiple lines.
+- Footnotes are detected by text pattern and may need review.
+- Very old PDFs with unusual embedded fonts may still need manual metadata overrides.
