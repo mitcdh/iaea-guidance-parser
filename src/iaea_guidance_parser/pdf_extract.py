@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fitz  # PyMuPDF
+try:
+    import fitz  # PyMuPDF
+except ModuleNotFoundError:  # pragma: no cover - exercised only in minimal test envs
+    fitz = None
 
 from .models import PageText
 from .rules import CONTENTS_HEADING_RE, PAGE_NUMBER_RE, normalize_text, remove_pdf_line_breaks
@@ -10,6 +13,8 @@ from .rules import CONTENTS_HEADING_RE, PAGE_NUMBER_RE, normalize_text, remove_p
 
 def extract_pages(pdf_path: Path) -> list[PageText]:
     """Extract page text and rough printed page numbers from a PDF."""
+    if fitz is None:
+        raise RuntimeError("PyMuPDF is required to extract PDF text. Install the `pymupdf` package.")
     doc = fitz.open(pdf_path)
     pages: list[PageText] = []
     for idx, page in enumerate(doc):

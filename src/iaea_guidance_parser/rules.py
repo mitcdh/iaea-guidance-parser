@@ -15,15 +15,20 @@ TABLE_RE = re.compile(rf"^TABLE\s+(?P<num>(?:[IVXLCDM]+{DASH_CLASS})?\d+)\.\s*(?
 TABLE_CONT_RE = re.compile(r"\(cont\.\)", flags=re.IGNORECASE)
 REFERENCE_ITEM_RE = re.compile(r"^\[(?P<num>\d+)\]\s*(?P<text>.*)")
 FOOTNOTE_RE = re.compile(r"^(?P<num>\d{1,2})\s+(?P<text>[A-Z][^\n]{8,}|[A-Za-z].{8,})")
+REQUIREMENT_RE = re.compile(r"^(?P<label>Requirement)\s+(?P<num>\d+[A-Z]?):\s*(?P<text>.*)", flags=re.IGNORECASE)
 PAGE_NUMBER_RE = re.compile(r"^(?P<num>\d{1,4})$")
 
 MAJOR_BODY_HEADING_RE = re.compile(r"^(?P<num>\d+)\.\s+(?P<title>[A-Z].*)")
-ANNEX_HEADING_RE = re.compile(r"^Annex\s+(?P<num>[IVXLCDM]+)\s*$", flags=re.IGNORECASE)
-APPENDIX_HEADING_RE = re.compile(r"^Appendix\s*$", flags=re.IGNORECASE)
+ANNEX_HEADING_RE = re.compile(r"^Annex(?:\s+(?P<num>[IVXLCDM]+))?\s*$", flags=re.IGNORECASE)
+APPENDIX_HEADING_RE = re.compile(r"^Appendix(?:\s+(?P<num>[IVXLCDM]+))?\s*$", flags=re.IGNORECASE)
 REFERENCES_HEADING_RE = re.compile(r"^REFERENCES\s*$")
 GLOSSARY_HEADING_RE = re.compile(r"^GLOSSARY\s*$")
 RELATED_PUBLICATIONS_RE = re.compile(r"^RELATED PUBLICATIONS\s*$")
 CONTENTS_HEADING_RE = re.compile(r"^CONTENTS\s*$")
+BACKMATTER_HEADING_RE = re.compile(
+    r"^(?:CONTRIBUTORS TO DRAFTING AND REVIEW|BODIES FOR THE ENDORSEMENT.*|ORDERING LOCALLY)\s*$",
+    flags=re.IGNORECASE,
+)
 
 KNOWN_DOCUMENT_CATEGORIES = {
     "Nuclear Security Fundamentals": "nuclear_security_fundamentals",
@@ -57,6 +62,7 @@ KNOWN_PUBLICATION_HEADINGS = {
     "CONTENTS",
     "RELATED PUBLICATIONS",
     "ORDERING LOCALLY",
+    "CONTRIBUTORS TO DRAFTING AND REVIEW",
 }
 
 
@@ -111,6 +117,8 @@ def _starts_new_structural_line(line: str) -> bool:
         or MAJOR_BODY_HEADING_RE.match(line)
         or FIGURE_RE.match(line)
         or TABLE_RE.match(line)
+        or FOOTNOTE_RE.match(line)
+        or REQUIREMENT_RE.match(line)
         or REFERENCE_ITEM_RE.match(line)
         or APPENDIX_HEADING_RE.match(line)
         or ANNEX_HEADING_RE.match(line)
@@ -118,6 +126,7 @@ def _starts_new_structural_line(line: str) -> bool:
         or GLOSSARY_HEADING_RE.match(line)
         or RELATED_PUBLICATIONS_RE.match(line)
         or CONTENTS_HEADING_RE.match(line)
+        or BACKMATTER_HEADING_RE.match(line)
         or line in KNOWN_PUBLICATION_HEADINGS
         or is_all_caps_heading(line)
     )

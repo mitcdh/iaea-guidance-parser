@@ -28,7 +28,7 @@ def parse(
     write_outputs(out, metadata, records)
     console.print(f"[green]Wrote {len(records)} structural records to {out}[/green]")
     console.print(f"Document type: [bold]{metadata.document_type}[/bold] ({metadata.document_category})")
-    console.print("Key outputs: structural_index.jsonl, custom_gpt_knowledge.jsonl, custom_gpt_knowledge.md, qa_report.md")
+    console.print("Key outputs: structural_index.jsonl, custom_gpt_knowledge.jsonl, custom_gpt_knowledge.md, qa_report.md, qa_report.json")
 
 
 @app.command("batch")
@@ -127,5 +127,5 @@ def parse_series(
     console.print(
         "Key combined outputs: series_structural_index.jsonl, series_custom_gpt_knowledge.jsonl, "
         "series_custom_gpt_knowledge.md, series_custom_gpt_knowledge_parts/, series_manifest.csv, "
-        "series_qa_report.md"
+        "series_qa_report.md, qa_report.md, qa_report.json"
     )

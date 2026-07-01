@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import re
+import uuid
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
 
+from . import __version__
 from .models import DocumentMetadata, StructuralElement
+from .qa import run_records_qa, run_series_qa, write_qa_json, write_qa_markdown
 
 
 CUSTOM_GPT_MARKDOWN_PART_MAX_BYTES = 4_500_000
@@ -32,6 +36,17 @@ def write_outputs(out_dir: Path, metadata: DocumentMetadata, records: list[Struc
     write_markdown_knowledge(out_dir / "custom_gpt_knowledge.md", metadata, records)
     write_csv(out_dir / "structural_index_preview.csv", records)
     write_qa_report(out_dir / "qa_report.md", metadata, records)
+    findings = run_records_qa(records, manifest_doc_ids={metadata.document_id}, manifest_counts={metadata.document_id: len(records)})
+    write_qa_json(
+        out_dir / "qa_report.json",
+        findings,
+        metadata={
+            "parser_version": __version__,
+            "document_id": metadata.document_id,
+            "source_file": metadata.source_file,
+            "source_sha256": metadata.source_sha256,
+        },
+    )
 
 
 def write_series_outputs(
@@ -46,19 +61,28 @@ def write_series_outputs(
     all_records: list[StructuralElement] = []
     for result in results:
         all_records.extend(result.records)
+    run_info = build_series_run_info(series_config or {}, results)
 
     write_json(out_dir / "series_config_effective.json", series_config or {})
     write_jsonl(out_dir / "series_structural_index.jsonl", [r.to_dict() for r in all_records])
     write_jsonl(out_dir / "series_custom_gpt_knowledge.jsonl", [to_custom_gpt_record(r) for r in all_records])
-    write_series_markdown_knowledge(out_dir / "series_custom_gpt_knowledge.md", series_config or {}, results)
-    write_series_markdown_knowledge_parts(
+    write_series_markdown_knowledge(out_dir / "series_custom_gpt_knowledge.md", series_config or {}, results, run_info=run_info)
+    part_files = write_series_markdown_knowledge_parts(
         out_dir / "series_custom_gpt_knowledge_parts",
         series_config or {},
         results,
+        run_info=run_info,
     )
-    write_series_manifest(out_dir / "series_manifest.json", results, failures)
-    write_series_manifest_csv(out_dir / "series_manifest.csv", results, failures)
-    write_series_qa_report(out_dir / "series_qa_report.md", series_config or {}, results, failures)
+    run_info["output_parts"] = [
+        {"path": str(path), "sha256": sha256_file(path), "bytes": path.stat().st_size}
+        for path in part_files
+    ]
+    findings = run_series_qa(results, failures)
+    write_series_manifest(out_dir / "series_manifest.json", results, failures, run_info=run_info)
+    write_series_manifest_csv(out_dir / "series_manifest.csv", results, failures, run_info=run_info)
+    write_series_qa_report(out_dir / "series_qa_report.md", series_config or {}, results, failures, findings=findings, run_info=run_info)
+    write_qa_json(out_dir / "qa_report.json", findings, metadata=run_info)
+    write_qa_markdown(out_dir / "qa_report.md", findings, title="Series QA report", metadata=run_info)
 
 
 def write_json(path: Path, obj) -> None:
@@ -70,6 +94,36 @@ def write_jsonl(path: Path, rows: Iterable[dict]) -> None:
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def build_series_run_info(series_config: dict[str, Any], results: list[Any]) -> dict[str, Any]:
+    series = series_config.get("series", {}) or {}
+    documents = [
+        {
+            "document_id": result.metadata.document_id,
+            "source_pdf": str(result.source_pdf),
+            "source_sha256": result.metadata.source_sha256,
+            "record_count": len(result.records),
+        }
+        for result in sorted(results, key=lambda r: r.metadata.document_id)
+    ]
+    manifest_blob = json.dumps(documents, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return {
+        "run_id": str(uuid.uuid4()),
+        "parser_version": __version__,
+        "series_id": series.get("series_id", ""),
+        "series_name": series.get("series_name", ""),
+        "document_manifest_checksum": hashlib.sha256(manifest_blob).hexdigest(),
+        "output_parts": [],
+    }
 
 
 def to_custom_gpt_record(r: StructuralElement) -> dict:
@@ -171,8 +225,12 @@ def write_qa_report(path: Path, metadata: DocumentMetadata, records: list[Struct
     by_region = Counter(r.source_region for r in records)
     missing_doc_type = [r.record_id for r in records if not r.document_type or not r.document_category]
     low_conf = [r for r in records if r.confidence == "low"]
+    findings = run_records_qa(records, manifest_doc_ids={metadata.document_id}, manifest_counts={metadata.document_id: len(records)})
     with path.open("w", encoding="utf-8") as f:
         f.write("# QA report\n\n")
+        f.write("## Run metadata\n\n")
+        f.write(f"- Parser version: `{__version__}`\n")
+        f.write(f"- Source SHA-256: `{metadata.source_sha256}`\n\n")
         f.write(f"Document ID: `{metadata.document_id}`\n\n")
         f.write(f"Document type: `{metadata.document_type}` ({metadata.document_category})\n\n")
         f.write(f"Series: `{metadata.series_name} {metadata.series_number}`\n\n")
@@ -194,12 +252,36 @@ def write_qa_report(path: Path, metadata: DocumentMetadata, records: list[Struct
         f.write(f"Low-confidence record count: {len(low_conf)}\n\n")
         for r in low_conf[:50]:
             f.write(f"- {r.record_id}: {r.element_type} p. {r.page_start_pdf}; {r.text[:120]}\n")
+        f.write("\n## Automated QA findings\n\n")
+        f.write(f"Finding count: {len(findings)}\n\n")
+        for severity, count in sorted(Counter(f.severity for f in findings).items()):
+            f.write(f"- {severity}: {count}\n")
+        if findings:
+            f.write("\n### Highest-severity examples\n\n")
+            severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+            for finding in sorted(findings, key=lambda f: (severity_order.get(f.severity, 9), f.doc_id, f.page))[:20]:
+                f.write(
+                    f"- `{finding.severity}` `{finding.check}` `{finding.record_id}` p. {finding.page or '?'}: "
+                    f"{finding.reason} Suggested fix: {finding.suggested_fix}\n"
+                )
 
 
-def write_series_markdown_knowledge(path: Path, series_config: dict[str, Any], results: list[Any]) -> None:
+def write_series_markdown_knowledge(
+    path: Path,
+    series_config: dict[str, Any],
+    results: list[Any],
+    *,
+    run_info: dict[str, Any] | None = None,
+) -> None:
     series = series_config.get("series", {}) or {}
     with path.open("w", encoding="utf-8") as f:
         f.write("# Combined Custom GPT Knowledge\n\n")
+        if run_info:
+            f.write("## Run metadata\n\n")
+            for key in ["run_id", "parser_version", "series_id", "document_manifest_checksum"]:
+                if run_info.get(key):
+                    f.write(f"- {key}: {run_info[key]}\n")
+            f.write("\n")
         if series:
             f.write("## Series metadata\n\n")
             for key in ["series_id", "series_name", "document_family", "document_domain", "document_subdomain"]:
@@ -230,7 +312,8 @@ def write_series_markdown_knowledge_parts(
     results: list[Any],
     *,
     max_bytes: int = CUSTOM_GPT_MARKDOWN_PART_MAX_BYTES,
-) -> None:
+    run_info: dict[str, Any] | None = None,
+) -> list[Path]:
     """Write upload-sized Markdown knowledge files for Custom GPT Knowledge.
 
     The Custom GPT builder can reject a file whose extracted text is too large,
@@ -246,7 +329,7 @@ def write_series_markdown_knowledge_parts(
             "# Custom GPT Knowledge Parts\n\nNo parsed documents were available for this run.\n",
             encoding="utf-8",
         )
-        return
+        return []
 
     body_limit = max(1_000, max_bytes - CUSTOM_GPT_MARKDOWN_PART_HEADER_ALLOWANCE_BYTES)
     parts: list[dict[str, Any]] = []
@@ -295,12 +378,13 @@ def write_series_markdown_knowledge_parts(
     for index, part in enumerate(parts, start=1):
         part_path = out_dir / f"part_{index:03d}_of_{total_parts:03d}.md"
         with part_path.open("w", encoding="utf-8") as f:
-            f.write(_series_part_preamble(series_config, index, total_parts, part["documents"]))
+            f.write(_series_part_preamble(series_config, index, total_parts, part["documents"], run_info=run_info))
             for section in part["sections"]:
                 f.write(section)
         part_files.append(part_path)
 
     _write_series_parts_readme(out_dir / "README.md", part_files, max_bytes)
+    return part_files
 
 
 def _encoded_len(value: str) -> int:
@@ -361,6 +445,8 @@ def _series_part_preamble(
     part_number: int,
     total_parts: int,
     documents: list[str],
+    *,
+    run_info: dict[str, Any] | None = None,
 ) -> str:
     series = series_config.get("series", {}) or {}
     lines = [
@@ -376,6 +462,13 @@ def _series_part_preamble(
         for key in ["series_id", "series_name", "document_family", "document_domain", "document_subdomain"]:
             if series.get(key):
                 lines.append(f"- {key}: {series[key]}")
+        lines.append("")
+    if run_info:
+        lines.append("## Run metadata")
+        lines.append("")
+        for key in ["run_id", "parser_version", "series_id", "document_manifest_checksum"]:
+            if run_info.get(key):
+                lines.append(f"- {key}: {run_info[key]}")
         lines.append("")
 
     lines.extend(STATUS_AND_REGION_LEGEND.rstrip().splitlines())
@@ -428,7 +521,13 @@ def _write_series_parts_readme(path: Path, part_files: list[Path], max_bytes: in
             f.write(f"- `{part_file.name}` ({part_file.stat().st_size:,} bytes)\n")
 
 
-def write_series_manifest(path: Path, results: list[Any], failures: list[Any]) -> None:
+def write_series_manifest(
+    path: Path,
+    results: list[Any],
+    failures: list[Any],
+    *,
+    run_info: dict[str, Any] | None = None,
+) -> None:
     docs = []
     for result in results:
         meta = result.metadata
@@ -460,6 +559,11 @@ def write_series_manifest(path: Path, results: list[Any], failures: list[Any]) -
     write_json(
         path,
         {
+            "run_id": (run_info or {}).get("run_id", ""),
+            "parser_version": (run_info or {}).get("parser_version", __version__),
+            "series_id": (run_info or {}).get("series_id", ""),
+            "document_manifest_checksum": (run_info or {}).get("document_manifest_checksum", ""),
+            "output_parts": (run_info or {}).get("output_parts", []),
             "document_count_ok": len(results),
             "document_count_failed": len(failures),
             "total_record_count": sum(len(r.records) for r in results),
@@ -468,8 +572,18 @@ def write_series_manifest(path: Path, results: list[Any], failures: list[Any]) -
     )
 
 
-def write_series_manifest_csv(path: Path, results: list[Any], failures: list[Any]) -> None:
+def write_series_manifest_csv(
+    path: Path,
+    results: list[Any],
+    failures: list[Any],
+    *,
+    run_info: dict[str, Any] | None = None,
+) -> None:
     fields = [
+        "run_id",
+        "parser_version",
+        "series_id",
+        "document_manifest_checksum",
         "status",
         "source_pdf",
         "output_dir",
@@ -493,11 +607,16 @@ def write_series_manifest_csv(path: Path, results: list[Any], failures: list[Any
     with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
+        run_info = run_info or {}
         for result in results:
             meta = result.metadata
             counts = Counter(r.element_type for r in result.records)
             writer.writerow(
                 {
+                    "run_id": run_info.get("run_id", ""),
+                    "parser_version": run_info.get("parser_version", __version__),
+                    "series_id": run_info.get("series_id", ""),
+                    "document_manifest_checksum": run_info.get("document_manifest_checksum", ""),
                     "status": "ok",
                     "source_pdf": str(result.source_pdf),
                     "output_dir": str(result.output_dir),
@@ -520,10 +639,28 @@ def write_series_manifest_csv(path: Path, results: list[Any], failures: list[Any
                 }
             )
         for failure in failures:
-            writer.writerow({"status": "failed", "source_pdf": str(failure.source_pdf), "error": failure.error})
+            writer.writerow(
+                {
+                    "run_id": run_info.get("run_id", ""),
+                    "parser_version": run_info.get("parser_version", __version__),
+                    "series_id": run_info.get("series_id", ""),
+                    "document_manifest_checksum": run_info.get("document_manifest_checksum", ""),
+                    "status": "failed",
+                    "source_pdf": str(failure.source_pdf),
+                    "error": failure.error,
+                }
+            )
 
 
-def write_series_qa_report(path: Path, series_config: dict[str, Any], results: list[Any], failures: list[Any]) -> None:
+def write_series_qa_report(
+    path: Path,
+    series_config: dict[str, Any],
+    results: list[Any],
+    failures: list[Any],
+    *,
+    findings: list[Any] | None = None,
+    run_info: dict[str, Any] | None = None,
+) -> None:
     all_records = [r for result in results for r in result.records]
     by_type = Counter(r.element_type for r in all_records)
     by_status = Counter(r.text_status for r in all_records)
@@ -534,6 +671,12 @@ def write_series_qa_report(path: Path, series_config: dict[str, Any], results: l
 
     with path.open("w", encoding="utf-8") as f:
         f.write("# Series QA report\n\n")
+        if run_info:
+            f.write("## Run metadata\n\n")
+            for key in ["run_id", "parser_version", "series_id", "document_manifest_checksum"]:
+                if run_info.get(key):
+                    f.write(f"- {key}: `{run_info[key]}`\n")
+            f.write("\n")
         series = series_config.get("series", {}) or {}
         if series:
             f.write("## Series metadata\n\n")
@@ -584,3 +727,22 @@ def write_series_qa_report(path: Path, series_config: dict[str, Any], results: l
         f.write(f"Low-confidence record count: {len(low_conf)}\n\n")
         for r in low_conf[:100]:
             f.write(f"- {r.record_id}: {r.element_type} p. {r.page_start_pdf}; {r.text[:120]}\n")
+        findings = findings or []
+        f.write("\n## Automated QA findings\n\n")
+        f.write(f"Finding count: {len(findings)}\n\n")
+        for severity, count in sorted(Counter(f.severity for f in findings).items()):
+            f.write(f"- {severity}: {count}\n")
+        if findings:
+            f.write("\n### Highest-severity examples\n\n")
+            severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+            for finding in sorted(findings, key=lambda f: (severity_order.get(f.severity, 9), f.doc_id, f.page))[:20]:
+                f.write(
+                    f"- `{finding.severity}` `{finding.check}` `{finding.doc_id}` "
+                    f"`{finding.record_id}` p. {finding.page or '?'}: {finding.reason} "
+                    f"Suggested fix: {finding.suggested_fix}\n"
+                )
+        f.write("\n## Table Layout Warning\n\n")
+        f.write(
+            "Do not rely on exact table layout without PDF verification. The parser preserves raw table text, "
+            "but complex row and column boundaries can require manual review.\n"
+        )

@@ -6,6 +6,7 @@ from iaea_guidance_parser.models import DocumentMetadata, StructuralElement
 from iaea_guidance_parser.metadata import deep_merge, infer_metadata
 from iaea_guidance_parser.parser import IAEAGuidanceParser, classify_status
 from iaea_guidance_parser.rules import (
+    ANNEX_HEADING_RE,
     ANNEX_PARA_RE,
     APPENDIX_PARA_RE,
     BODY_PARA_RE,
@@ -27,6 +28,8 @@ def test_paragraph_patterns():
 def test_structural_labels():
     assert FIGURE_RE.match("FIG. III–1. Physical and logical boundary zone requirements")
     assert TABLE_RE.match("TABLE III–1. LIST OF SYSTEMS: EXAMPLE")
+    assert ANNEX_HEADING_RE.match("Annex")
+    assert ANNEX_HEADING_RE.match("Annex III")
 
 def test_deep_merge_nested_config():
     base = {"document": {"series_name": "A", "document_domain": "x"}, "parser": {"include_text_blocks": True}}
@@ -123,6 +126,47 @@ def test_nuclear_security_recommendations_type_inference(tmp_path):
     metadata = infer_metadata(pdf, [page], {})
     assert metadata.document_category == "Nuclear Security Recommendations"
     assert metadata.document_type == "nuclear_security_recommendations"
+    assert metadata.series_number == "No. 13"
+    assert metadata.document_id == "NSS-13"
+
+
+def test_nuclear_security_series_number_compaction_prevents_title_inflated_ids(tmp_path):
+    revised_pdf = tmp_path / "NSS 12-T (Rev. 1) Model Academic Curriculum in Nuclear Security.pdf"
+    revised_pdf.write_bytes(b"not a real pdf")
+    revised_page = PageText(
+        pdf_page=1,
+        printed_page=None,
+        text="\n".join(
+            [
+                "IAEA Nuclear Security Series No. 12-T (Rev. 1) Technical Guidance",
+                "MODEL ACADEMIC CURRICULUM IN NUCLEAR SECURITY",
+            ]
+        ),
+        lines=[],
+    )
+    revised = infer_metadata(
+        revised_pdf,
+        [revised_page],
+        {"document": {"series_name": "IAEA Nuclear Security Series", "document_domain": "nuclear_security"}},
+    )
+    assert revised.series_number == "No. 12–T (Rev. 1)"
+    assert revised.document_id == "NSS-12-T-REV1"
+
+    technical_pdf = tmp_path / "NSS 34-T Security of Nuclear Material in Transport.pdf"
+    technical_pdf.write_bytes(b"not a real pdf")
+    technical_page = PageText(
+        pdf_page=1,
+        printed_page=None,
+        text="IAEA Nuclear Security Series No. 34 –T Technical Guidance\nSECURITY OF NUCLEAR MATERIAL IN TRANSPORT",
+        lines=[],
+    )
+    technical = infer_metadata(
+        technical_pdf,
+        [technical_page],
+        {"document": {"series_name": "IAEA Nuclear Security Series", "document_domain": "nuclear_security"}},
+    )
+    assert technical.series_number == "No. 34–T"
+    assert technical.document_id == "NSS-34-T"
 
 
 def test_declared_and_prefix_safety_categories_are_preserved(tmp_path):

@@ -72,7 +72,12 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
     title, title_source = _resolve_title(pdf_path, first_text, pages[:10], cfg_doc, cfg_fallback)
     inferred_series_name = _infer_series_name(first_text)
     series_name = cfg_doc.get("series_name") or inferred_series_name or cfg_fallback.get("series_name", "")
-    series_number = cfg_doc.get("series_number") or _infer_series_number(first_text) or cfg_fallback.get("series_number", "")
+    series_number = (
+        cfg_doc.get("series_number")
+        or _infer_series_number(first_text)
+        or _infer_series_number_from_filename(pdf_path)
+        or cfg_fallback.get("series_number", "")
+    )
     domain = cfg_doc.get("document_domain") or cfg_fallback.get("document_domain") or _infer_document_domain(first_text, series_name)
     inferred_category = _infer_category(
         first_text,
@@ -297,8 +302,46 @@ def _infer_series_number(text: str) -> str:
         if m:
             raw = m.group(1).strip()
             raw = raw.split("\n")[0].strip()
-            return "No. " + canonical_dash(raw).replace("‑", "-")
+            return "No. " + _compact_series_number(raw)
     return ""
+
+
+def _infer_series_number_from_filename(pdf_path: Path) -> str:
+    stem = re.sub(r"\s+", " ", pdf_path.stem.replace("_", " ")).strip()
+    patterns = [
+        r"\bNSS\s*\d+(?:\s*[-‑–—]\s*[GT])?(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\bGSR\s+Part\s+\d+(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\bSSR[-\s]*\d+(?:[./]\d+)?(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\bSSG[-\s]*\d+(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\bGSG[-\s]*\d+(?:\.\d+)?(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\bGS[-\s]*G[-\s]*\d+(?:\.\d+)?(?:\s*\(Rev\.?\s*\d+\))?",
+        r"\b(?:SF|RS[-\s]*G|WS[-\s]*G|NS[-\s]*G|TS[-\s]*G)[-\s]*\d+(?:\.\d+)?(?:\s*\(Rev\.?\s*\d+\))?",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, stem, flags=re.I)
+        if match:
+            return "No. " + _compact_series_number(match.group(0).strip())
+    return ""
+
+
+def _compact_series_number(raw: str) -> str:
+    """Keep only the authoritative publication number from a title-page line."""
+    raw = canonical_dash(raw).replace("‑", "-")
+    raw = re.sub(r"\s+", " ", raw).strip()
+    raw = re.sub(r"\s*–\s*", "–", raw)
+    raw = re.sub(r"\s*-\s*", "-", raw)
+    patterns = [
+        r"^(NSS\s*\d+(?:[-–][A-Z])?(?:\s*\(Rev\.?\s*\d+\))?)(?=\s|$|[.,;:])",
+        r"^(GSR\s+Part\s+\d+(?:\s*\(Rev\.?\s*\d+\))?)(?=\s|$|[.,;:])",
+        r"^(SSR[-\s]*\d+(?:[./]\d+)?(?:[-/]\d+)?(?:\s*\(Rev\.?\s*\d+\))?)(?=\s|$|[.,;:])",
+        r"^((?:GS[-–\s]*G|GSG|SSG|SF|RS[-–\s]*G|WS[-–\s]*G|NS[-–\s]*G|TS[-–\s]*G)[-–\s]*\d+(?:\.\d+)?(?:\s*\(Rev\.?\s*\d+\))?)(?=\s|$|[.,;:])",
+        r"^(\d+(?:[-–][A-Z])?(?:\s*\(Rev\.?\s*\d+\))?)(?=\s|$|[.,;:])",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, raw, flags=re.I)
+        if match:
+            return match.group(1).strip()
+    return raw
 
 
 def _infer_document_domain(text: str, series_name: str) -> str:
@@ -447,8 +490,9 @@ def _infer_isbn_pdf(text: str) -> str:
 
 def _make_document_id(series_number: str, title: str, series_name: str = "", document_domain: str = "") -> str:
     if series_number:
-        s = canonical_dash(series_number).replace("–", "-")
+        s = canonical_dash(_compact_series_number(series_number)).replace("–", "-")
         s = re.sub(r"(?i)^No\.\s*", "", s).strip()
+        s = re.sub(r"(?i)^NSS\s+", "NSS-", s)
         if document_domain == "nuclear_security" or "security" in series_name.lower():
             if not re.match(r"(?i)^NSS[-_]", s):
                 s = f"NSS-{s}"
@@ -457,8 +501,9 @@ def _make_document_id(series_number: str, title: str, series_name: str = "", doc
                 s = f"SAFETY-{s}"
         s = re.sub(r"(?i)\(\s*Rev\.?\s*(\d+)\s*\)", r"Rev\1", s)
         s = re.sub(r"(?i)Rev\.?\s*(\d+)", r"Rev\1", s)
-        s = s.replace(".", "")
+        s = re.sub(r"[./]+", "-", s)
         s = re.sub(r"[^A-Za-z0-9._-]+", "-", s).strip("-")
+        s = re.sub(r"-+", "-", s)
         return s.upper()
     s = re.sub(r"[^A-Za-z0-9]+", "-", title).strip("-").upper()
     return s[:80] or "IAEA-DOCUMENT"
