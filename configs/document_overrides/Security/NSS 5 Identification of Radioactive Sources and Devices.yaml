@@ -1,0 +1,13 @@
+# Official source:
+# https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1278_web.pdf
+document:
+  document_id: "NSS-5"
+  title: "Identification of Radioactive Sources and Devices"
+  publication_year: 2007
+  series_name: "IAEA Nuclear Security Series"
+  series_number: "No. 5"
+  document_category: "Technical Guidance"
+  document_type: "technical_guidance"
+  sti_pub_number: "STI/PUB/1278"
+  # The IAEA lists ISBN 92-0-111406-0 without a PDF format label, so
+  # isbn_pdf is intentionally omitted.

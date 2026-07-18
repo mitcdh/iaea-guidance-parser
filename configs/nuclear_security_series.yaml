@@ -1,0 +1,29 @@
+# Series-level config for the Security run, containing IAEA Nuclear Security PDFs.
+# Values under `series` are applied as shared metadata or fallback values.
+# Document category/type are normally inferred from each PDF cover/title page.
+series:
+  series_id: Security
+  series_name: IAEA Nuclear Security Series
+  document_family: IAEA Nuclear Security Series
+  document_domain: nuclear_security
+  publisher: International Atomic Energy Agency
+  publication_place: Vienna
+  language: en
+
+parser:
+  include_text_blocks: true
+
+# Fallbacks are used only if the parser cannot infer a value from the PDF.
+fallbacks:
+  series_name: IAEA Nuclear Security Series
+  document_family: IAEA Nuclear Security Series
+  document_domain: nuclear_security
+
+# Optional per-document overrides can be added here by filename, stem or relative path.
+# documents:
+#   PUB1921_web.pdf:
+#     document:
+#       document_id: NSS-17-T-REV1
+#       document_category: Technical Guidance
+#       document_type: technical_guidance
+#       document_subdomain: computer_security_for_nuclear_facilities

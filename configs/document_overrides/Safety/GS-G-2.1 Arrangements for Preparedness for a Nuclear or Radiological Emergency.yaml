@@ -1,0 +1,13 @@
+# Official source:
+# https://www-pub.iaea.org/MTCD/publications/PDF/Pub1265web.pdf
+document:
+  document_id: "GS-G-2-1"
+  title: "Arrangements for Preparedness for a Nuclear or Radiological Emergency"
+  publication_year: 2007
+  series_name: "IAEA Safety Standards Series"
+  series_number: "No. GS-G-2.1"
+  document_category: "Safety Guide"
+  document_type: "safety_guide"
+  sti_pub_number: "STI/PUB/1265"
+  # The IAEA lists ISBN 92-0-109306-3 without a PDF format label, so
+  # isbn_pdf is intentionally omitted.

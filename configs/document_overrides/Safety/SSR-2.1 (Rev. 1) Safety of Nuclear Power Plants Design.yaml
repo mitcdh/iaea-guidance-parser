@@ -1,0 +1,13 @@
+# Official source:
+# https://www.iaea.org/publications/10885/safety-of-nuclear-power-plants-design
+document:
+  document_id: "SSR-2-1-REV1"
+  title: "Safety of Nuclear Power Plants: Design"
+  publication_year: 2016
+  series_name: "IAEA Safety Standards Series"
+  series_number: "No. SSR-2/1 (Rev. 1)"
+  document_category: "Specific Safety Requirements"
+  document_type: "specific_safety_requirements"
+  sti_pub_number: "STI/PUB/1715"
+  # The IAEA identifies ISBN 978-92-0-109315-8 as the paperback ISBN, so
+  # isbn_pdf is intentionally omitted.

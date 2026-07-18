@@ -1,0 +1,12 @@
+# Official source:
+# https://www-pub.iaea.org/MTCD/Publications/PDF/PUB1953_web.pdf
+document:
+  document_id: "SSG-26-REV1"
+  title: "Advisory Material for the IAEA Regulations for the Safe Transport of Radioactive Material (2018 Edition)"
+  publication_year: 2022
+  series_name: "IAEA Safety Standards Series"
+  series_number: "No. SSG-26 (Rev. 1)"
+  document_category: "Specific Safety Guide"
+  document_type: "specific_safety_guide"
+  sti_pub_number: "STI/PUB/1953"
+  isbn_pdf: "978-92-0-119121-2"

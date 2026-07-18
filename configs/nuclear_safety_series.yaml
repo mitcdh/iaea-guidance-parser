@@ -1,0 +1,28 @@
+# Series-level config for the Safety run, containing IAEA nuclear safety PDFs.
+# Values under `series` are applied as shared metadata or fallback values.
+# Document category/type are normally inferred from each PDF cover/title page.
+series:
+  series_id: Safety
+  series_name: IAEA Safety Standards Series
+  document_family: IAEA Safety Standards Series
+  document_domain: nuclear_safety
+  publisher: International Atomic Energy Agency
+  publication_place: Vienna
+  language: en
+
+parser:
+  include_text_blocks: true
+
+# Fallbacks are used only if the parser cannot infer a value from the PDF.
+fallbacks:
+  series_name: IAEA Safety Standards Series
+  document_family: IAEA Safety Standards Series
+  document_domain: nuclear_safety
+
+# Optional per-document overrides can be added here by filename, stem or relative path.
+# documents:
+#   SSG-64.pdf:
+#     document:
+#       document_id: SSG-64
+#       document_category: Specific Safety Guide
+#       document_type: specific_safety_guide
