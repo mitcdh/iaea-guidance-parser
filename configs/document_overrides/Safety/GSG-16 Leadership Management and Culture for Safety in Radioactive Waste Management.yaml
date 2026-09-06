@@ -1,0 +1,9 @@
+parser:
+  # The printed caption is unpunctuated; restrict this interpretation to the
+  # reviewed page rather than accepting all inline references beginning “FIG.”.
+  label_exceptions:
+    - element_type: figure
+      pdf_page: 24
+      region: Body
+      raw_label: "FIG. 1"
+      canonical_id: "1"

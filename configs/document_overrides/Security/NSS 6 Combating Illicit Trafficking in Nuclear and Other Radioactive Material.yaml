@@ -1,0 +1,10 @@
+document:
+  title: "Combating Illicit Trafficking in Nuclear and Other Radioactive Material"
+parser:
+  # Source page 79 (PDF page 91) visibly prints the less-than-or-equal sign in
+  # Table 1, but the legacy MTSymbol character map exposes it as a pound sign.
+  font_decoders:
+    - pdf_pages: [91]
+      fonts: [MTSymbol]
+      replacements:
+        "£": "≤"

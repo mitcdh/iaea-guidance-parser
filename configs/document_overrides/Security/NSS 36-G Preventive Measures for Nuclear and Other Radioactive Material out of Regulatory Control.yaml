@@ -1,0 +1,17 @@
+parser:
+  label_exceptions:
+    - element_type: paragraph
+      pdf_page: 14
+      region: Body
+      raw_label: "2.5"
+      canonical_id: "2.5"
+    - element_type: paragraph
+      pdf_page: 16
+      region: Body
+      raw_label: "2.7"
+      canonical_id: "2.7"
+    - element_type: paragraph
+      pdf_page: 16
+      region: Body
+      raw_label: "2.8"
+      canonical_id: "2.8"

@@ -3,30 +3,31 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .models import StructuralElement
-from .parser import classify_status
-
+from .rules import classify_status
 
 STATUS_VALUES = {"Normative", "Informative", "Informational"}
 REGION_VALUES = {"FrontMatter", "Body", "Appendix", "Annex", "References", "Glossary", "BackMatter"}
 CONTINUATION_HEADING_WORDS = {"OF", "THE", "AND", "FOR", "IN", "TO", "WITH", "ON", "FROM", "BY"}
 
 REQUIREMENT_MARKER_RE = re.compile(r"\bRequirement\s+\d+[A-Z]?:", re.I)
-FOOTNOTE_BODY_RE = re.compile(r"\b\d{1,2}\s+(?:The|In|For|See|This|Where|If|According)\b")
+FOOTNOTE_BODY_RE = re.compile(r"(?<!\S)\d{1,2}\s+(?:The|In|For|See|This|Where|If|According)\b")
 PAGE_FURNITURE_RE = re.compile(
     r"\b\d{1,3}\s+(?:Appendix\s+[IVXLC]+|Annex\s+[IVXLC]+|REFERENCES|INTERNATIONAL ATOMIC ENERGY[^.;]*)\b",
     re.I,
 )
 # Three or four dots are common editorial ellipses. TOC dot leaders are much
 # longer, so require a run that is unlikely to occur in quoted prose.
-DOT_LEADER_RE = re.compile(r"(?:\.\s*){6,}")
+TOC_ENTRY_RE = re.compile(r"(?:\.\s*){6,}\s*\d+\s*$")
 CONTROL_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
-MOJIBAKE_RE = re.compile(r"(?:,\$\(\$|6Dihw\\|3Ulqflsohv|\ufffd|[\ue000-\uf8ff])")
-PAGE_ID_JOIN_RE = re.compile(r"\b\d{3}A\.\d+")
+SUBSTITUTION_CIPHER_RE = re.compile(r"(?:,\$\(\$|6Dihw\\|3Ulqflsohv|9'0\)%6\s+7\)'96-8=)")
+REPLACEMENT_CHARACTER_RE = re.compile(r"\ufffd")
+PRIVATE_USE_RE = re.compile(r"[\ue000-\uf8ff]")
 
 DEFAULT_QA_CONFIG = {
     "paragraph_collision_threshold": 3,
@@ -105,8 +106,10 @@ def run_records_qa(
     _check_heading_splits(records, findings)
     _check_toc_pollution(records, findings)
     _check_table_paragraph_collisions(records, findings, qa_config)
+    _check_table_contamination(records, findings)
     _check_status_region(records, findings)
     _check_text_quality(records, findings)
+    _check_local_id_scope(records, findings, qa_config)
     _check_manifest_consistency(records, manifest_doc_ids, manifest_counts or {}, findings)
     _check_record_id_collisions(records, findings)
     return findings
@@ -122,7 +125,9 @@ def summarize_findings(findings: Iterable[QAFinding]) -> dict[str, Any]:
     }
 
 
-def write_qa_json(path: Path, findings: list[QAFinding], *, metadata: dict[str, Any] | None = None) -> None:
+def write_qa_json(
+    path: Path, findings: list[QAFinding], *, metadata: dict[str, Any] | None = None
+) -> None:
     payload = {
         "metadata": metadata or {},
         "summary": summarize_findings(findings),
@@ -184,7 +189,9 @@ def write_qa_markdown(
         )
 
 
-def _finding(record: StructuralElement, check: str, severity: str, reason: str, suggested_fix: str) -> QAFinding:
+def _finding(
+    record: StructuralElement, check: str, severity: str, reason: str, suggested_fix: str
+) -> QAFinding:
     return QAFinding(
         check=check,
         severity=severity,
@@ -200,22 +207,62 @@ def _finding(record: StructuralElement, check: str, severity: str, reason: str, 
 
 
 def _page_range(record: StructuralElement) -> str:
-    return str(record.page_start_pdf) if record.page_start_pdf == record.page_end_pdf else f"{record.page_start_pdf}-{record.page_end_pdf}"
+    return (
+        str(record.page_start_pdf)
+        if record.page_start_pdf == record.page_end_pdf
+        else f"{record.page_start_pdf}-{record.page_end_pdf}"
+    )
 
 
-def _check_schema(records: list[StructuralElement], manifest_doc_ids: set[str], findings: list[QAFinding]) -> None:
+def _check_schema(
+    records: list[StructuralElement], manifest_doc_ids: set[str], findings: list[QAFinding]
+) -> None:
     for record in records:
         if record.text_status not in STATUS_VALUES:
-            findings.append(_finding(record, "schema_validation", "critical", f"Invalid status `{record.text_status}`.", "Fix status classification."))
+            findings.append(
+                _finding(
+                    record,
+                    "schema_validation",
+                    "critical",
+                    f"Invalid status `{record.text_status}`.",
+                    "Fix status classification.",
+                )
+            )
         if record.source_region not in REGION_VALUES:
-            findings.append(_finding(record, "schema_validation", "critical", f"Invalid region `{record.source_region}`.", "Fix region detection."))
+            findings.append(
+                _finding(
+                    record,
+                    "schema_validation",
+                    "critical",
+                    f"Invalid region `{record.source_region}`.",
+                    "Fix region detection.",
+                )
+            )
         if record.document_id not in manifest_doc_ids:
-            findings.append(_finding(record, "schema_validation", "critical", "Record doc ID is absent from the manifest.", "Regenerate the series from one manifest."))
+            findings.append(
+                _finding(
+                    record,
+                    "schema_validation",
+                    "critical",
+                    "Record doc ID is absent from the manifest.",
+                    "Regenerate the series from one manifest.",
+                )
+            )
         if not record.text.strip():
-            findings.append(_finding(record, "schema_validation", "medium", "Record text is empty.", "Suppress empty records or inspect source extraction."))
+            findings.append(
+                _finding(
+                    record,
+                    "schema_validation",
+                    "medium",
+                    "Record text is empty.",
+                    "Suppress empty records or inspect source extraction.",
+                )
+            )
 
 
-def _check_requirement_boundaries(records: list[StructuralElement], findings: list[QAFinding]) -> None:
+def _check_requirement_boundaries(
+    records: list[StructuralElement], findings: list[QAFinding]
+) -> None:
     by_doc: dict[str, list[StructuralElement]] = defaultdict(list)
     for record in records:
         by_doc[record.document_id].append(record)
@@ -264,8 +311,12 @@ def _check_requirement_boundaries(records: list[StructuralElement], findings: li
             )
 
 
-def _check_footnote_contamination(records: list[StructuralElement], findings: list[QAFinding]) -> None:
-    footnotes_by_doc = Counter(record.document_id for record in records if record.element_type == "footnote")
+def _check_footnote_contamination(
+    records: list[StructuralElement], findings: list[QAFinding]
+) -> None:
+    footnotes_by_doc = Counter(
+        record.document_id for record in records if record.element_type == "footnote"
+    )
     contaminated_docs: set[str] = set()
     for record in records:
         if record.element_type not in {"paragraph", "requirement", "text_block"}:
@@ -319,8 +370,16 @@ def _check_heading_splits(records: list[StructuralElement], findings: list[QAFin
     previous: StructuralElement | None = None
     reported_path_fragments: set[tuple[str, str]] = set()
     for record in records:
-        if previous and previous.document_id == record.document_id and previous.page_start_pdf == record.page_start_pdf:
-            if previous.element_type == "heading" and record.element_type == "heading" and _ends_with_continuation_word(previous.text):
+        if (
+            previous
+            and previous.document_id == record.document_id
+            and previous.page_start_pdf == record.page_start_pdf
+        ):
+            if (
+                previous.element_type == "heading"
+                and record.element_type == "heading"
+                and _ends_with_continuation_word(previous.text)
+            ):
                 findings.append(
                     _finding(
                         previous,
@@ -330,7 +389,9 @@ def _check_heading_splits(records: list[StructuralElement], findings: list[QAFin
                         "Merge contiguous heading fragments before updating section paths.",
                     )
                 )
-        fragment = next((part for part in record.section_path if _ends_with_continuation_word(part)), None)
+        fragment = next(
+            (part for part in record.section_path if _ends_with_continuation_word(part)), None
+        )
         fragment_key = (record.document_id, fragment or "")
         if fragment and fragment_key not in reported_path_fragments:
             reported_path_fragments.add(fragment_key)
@@ -348,7 +409,7 @@ def _check_heading_splits(records: list[StructuralElement], findings: list[QAFin
 
 def _check_toc_pollution(records: list[StructuralElement], findings: list[QAFinding]) -> None:
     for record in records:
-        if record.source_region == "Body" and DOT_LEADER_RE.search(record.text):
+        if record.source_region == "Body" and TOC_ENTRY_RE.search(record.text):
             findings.append(
                 _finding(
                     record,
@@ -358,7 +419,10 @@ def _check_toc_pollution(records: list[StructuralElement], findings: list[QAFind
                     "Keep TOC entries in FrontMatter or suppress them from substantive records.",
                 )
             )
-        if any(DOT_LEADER_RE.search(part) or re.search(r"\(\d+(?:[–-]\d+)?\)\s*\d+$", part) for part in record.section_path):
+        if any(
+            TOC_ENTRY_RE.search(part) or re.search(r"\(\d+(?:[–-]\d+)?\)\s*\d+$", part)
+            for part in record.section_path
+        ):
             findings.append(
                 _finding(
                     record,
@@ -370,15 +434,24 @@ def _check_toc_pollution(records: list[StructuralElement], findings: list[QAFind
             )
 
 
-def _check_table_paragraph_collisions(records: list[StructuralElement], findings: list[QAFinding], config: dict[str, Any]) -> None:
+def _check_table_paragraph_collisions(
+    records: list[StructuralElement], findings: list[QAFinding], config: dict[str, Any]
+) -> None:
     threshold = int(config["paragraph_collision_threshold"])
     short_text_chars = int(config["short_text_chars"])
-    paragraph_groups: dict[tuple[str, str], list[StructuralElement]] = defaultdict(list)
+    paragraph_groups: dict[tuple[str, str, str, str], list[StructuralElement]] = defaultdict(list)
+    by_document: dict[str, list[StructuralElement]] = defaultdict(list)
     for record in records:
+        by_document[record.document_id].append(record)
         if record.element_type == "paragraph" and record.element_id:
-            paragraph_groups[(record.document_id, record.element_id)].append(record)
+            scope = record.parent_element_id or ""
+            if record.source_region in {"Appendix", "Annex"} and record.section_path:
+                scope = record.section_path[0]
+            paragraph_groups[
+                (record.document_id, record.source_region, scope, record.element_id)
+            ].append(record)
 
-    for (_doc_id, _element_id), group in paragraph_groups.items():
+    for group in paragraph_groups.values():
         if len(group) <= threshold:
             continue
         short_records = [record for record in group if len(record.text) <= short_text_chars]
@@ -398,9 +471,8 @@ def _check_table_paragraph_collisions(records: list[StructuralElement], findings
     for table in (record for record in records if record.element_type == "table"):
         short_paragraphs = [
             record
-            for record in records
-            if record.document_id == table.document_id
-            and record.element_type == "paragraph"
+            for record in by_document[table.document_id]
+            if record.element_type == "paragraph"
             and table.page_start_pdf <= record.page_start_pdf <= table.page_end_pdf
             and len(record.text) <= short_text_chars
         ]
@@ -412,6 +484,34 @@ def _check_table_paragraph_collisions(records: list[StructuralElement], findings
                     "medium",
                     "Table page has many very short paragraph records.",
                     "Review whether table cell labels escaped the table detector.",
+                )
+            )
+
+
+def _check_table_contamination(records: list[StructuralElement], findings: list[QAFinding]) -> None:
+    embedded_figure = re.compile(r"(?m)^FIG\.\s+[A-Z0-9IVXLCDM.–()]+[.:]\s+")
+    embedded_region = re.compile(
+        r"(?m)^(?:REFERENCES|GLOSSARY|RELATED PUBLICATIONS|CONTRIBUTORS TO DRAFTING AND REVIEW)$"
+    )
+    for table in (record for record in records if record.element_type == "table"):
+        if embedded_figure.search(table.text):
+            findings.append(
+                _finding(
+                    table,
+                    "table_contamination",
+                    "high",
+                    "A figure caption appears inside a table record.",
+                    "End the table at the figure boundary and keep diagram text out of the table payload.",
+                )
+            )
+        elif embedded_region.search(table.text):
+            findings.append(
+                _finding(
+                    table,
+                    "table_contamination",
+                    "high",
+                    "A publication region heading appears inside a table record.",
+                    "End the table before the region transition and rebuild the section boundary.",
                 )
             )
 
@@ -448,17 +548,38 @@ def _check_text_quality(records: list[StructuralElement], findings: list[QAFindi
                     "Remove non-printing control characters with no semantic value.",
                 )
             )
-        if MOJIBAKE_RE.search(record.text):
+        if SUBSTITUTION_CIPHER_RE.search(record.text):
             findings.append(
                 _finding(
                     record,
-                    "text_quality",
+                    "font_substitution_cipher",
                     "high",
-                    "Text contains mojibake or encoding damage.",
-                    "Verify against the source PDF; repair only if source text clearly resolves the damage.",
+                    "Text contains a known substitution-font cipher signature.",
+                    "Add a font-, document- and page-scoped decoder only after verifying the source glyph mapping.",
                 )
             )
-        if re.search(r"[A-Za-z]-\s+[a-z]", record.text):
+        if REPLACEMENT_CHARACTER_RE.search(record.text):
+            findings.append(
+                _finding(
+                    record,
+                    "replacement_character",
+                    "high",
+                    "Text contains a Unicode replacement character.",
+                    "Verify the affected glyph against the source page before repairing it.",
+                )
+            )
+        if PRIVATE_USE_RE.search(record.text):
+            findings.append(
+                _finding(
+                    record,
+                    "private_use_glyph",
+                    "high",
+                    "Text contains a private-use glyph with no portable semantic meaning.",
+                    "Review the page image and preserve the source until the glyph can be resolved unambiguously.",
+                )
+            )
+        hyphenation = re.search(r"\b[A-Za-z]{3,}-\s+(?P<right>[a-z]{3,})", record.text)
+        if hyphenation and hyphenation.group("right") not in {"and", "und"}:
             findings.append(
                 _finding(
                     record,
@@ -468,16 +589,51 @@ def _check_text_quality(records: list[StructuralElement], findings: list[QAFindi
                     "Join PDF line-break hyphenation where it is clearly an ordinary word break.",
                 )
             )
-        if PAGE_ID_JOIN_RE.search(record.text):
+        printed_values = [record.page_start_printed, record.page_end_printed]
+        implausible = [
+            value
+            for value in printed_values
+            if value and value.isdigit() and int(value) > record.page_end_pdf + 20
+        ]
+        if implausible:
             findings.append(
                 _finding(
                     record,
-                    "text_quality",
-                    "medium",
-                    "Page number appears attached to a paragraph ID.",
-                    "Strip page furniture before semantic segmentation.",
+                    "printed_page_plausibility",
+                    "high",
+                    f"Printed page value `{implausible[0]}` is implausible for PDF page {record.page_end_pdf}.",
+                    "Use page-margin geometry and neighbouring-page evidence before removing a numeral as page furniture.",
                 )
             )
+
+
+def _check_local_id_scope(
+    records: list[StructuralElement],
+    findings: list[QAFinding],
+    config: dict[str, Any],
+) -> None:
+    """Flag heavily repeated body labels that have no explicit local parent."""
+    threshold = int(config["paragraph_collision_threshold"])
+    groups: dict[tuple[str, str, str], list[StructuralElement]] = defaultdict(list)
+    for record in records:
+        if record.element_type != "paragraph" or not record.element_id:
+            continue
+        groups[(record.document_id, record.source_region, record.element_id)].append(record)
+
+    for (_doc_id, region, element_id), group in groups.items():
+        if region != "Body" or len(group) <= threshold:
+            continue
+        if any(record.parent_element_id or record.extra.get("local_scope") for record in group):
+            continue
+        findings.append(
+            _finding(
+                group[0],
+                "duplicate_local_id_without_scope",
+                "medium",
+                f"Paragraph label `{element_id}` occurs {len(group)} times in Body without a local parent scope.",
+                "Verify whether the source restarts numbering inside schedules, forms or table-like regions and configure a local scope if it does.",
+            )
+        )
 
 
 def _check_manifest_consistency(
@@ -530,7 +686,9 @@ def _check_manifest_consistency(
                     )
 
 
-def _check_record_id_collisions(records: list[StructuralElement], findings: list[QAFinding]) -> None:
+def _check_record_id_collisions(
+    records: list[StructuralElement], findings: list[QAFinding]
+) -> None:
     counts = Counter(record.record_id for record in records)
     for record in records:
         if counts[record.record_id] > 1:

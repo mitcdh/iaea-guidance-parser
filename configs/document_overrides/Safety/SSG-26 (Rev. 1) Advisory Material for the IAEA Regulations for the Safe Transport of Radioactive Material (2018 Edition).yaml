@@ -10,3 +10,12 @@ document:
   document_type: "specific_safety_guide"
   sti_pub_number: "STI/PUB/1953"
   isbn_pdf: "978-92-0-119121-2"
+parser:
+  # This reviewed source label omits the final full stop. Keep the exception
+  # page- and region-scoped so ordinary decimal text cannot become a paragraph.
+  label_exceptions:
+    - element_type: paragraph
+      pdf_page: 25
+      region: Body
+      raw_label: "106.2"
+      canonical_id: "106.2"

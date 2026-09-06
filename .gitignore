@@ -1,6 +1,10 @@
 # Source PDF corpora and generated parser outputs
 outputs/
 inputs/
+!inputs/filelist.txt
+
+# Local staging, parser comparisons, and recoverable output backups
+tmp/
 
 # Python virtual environments
 .venv/
@@ -12,7 +16,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.hypothesis/
+.tox/
+.nox/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 
 # Python packaging/build artifacts

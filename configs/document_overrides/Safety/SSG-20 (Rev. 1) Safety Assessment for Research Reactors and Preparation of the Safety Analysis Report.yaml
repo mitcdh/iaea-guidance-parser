@@ -1,0 +1,4 @@
+# Physical PDF page 6 prints STI/PUB1981 without the usual second slash.
+# Preserve that source spelling; the generic STI/PUB/number matcher misses it.
+document:
+  sti_pub_number: STI/PUB1981

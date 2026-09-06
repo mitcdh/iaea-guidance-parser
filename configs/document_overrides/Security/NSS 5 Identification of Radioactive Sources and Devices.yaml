@@ -11,3 +11,8 @@ document:
   sti_pub_number: "STI/PUB/1278"
   # The IAEA lists ISBN 92-0-111406-0 without a PDF format label, so
   # isbn_pdf is intentionally omitted.
+parser:
+  font_decoders:
+    - pdf_pages: [153]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29

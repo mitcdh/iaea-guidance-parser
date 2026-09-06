@@ -1,0 +1,10 @@
+document:
+  title: "Application of the Management System for Facilities and Activities"
+parser:
+  font_decoders:
+    - pdf_pages: [1, 145, 146]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29
+    - pdf_pages: [2]
+      fonts: [TimesTen-Roman, TimesTen-Bold, TimesTen-Italic]
+      ascii_offset: 31

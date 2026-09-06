@@ -1,0 +1,7 @@
+parser:
+  label_exceptions:
+    - element_type: paragraph
+      pdf_page: 22
+      region: Body
+      raw_label: "4.4"
+      canonical_id: "4.4"

@@ -1,0 +1,7 @@
+parser:
+  # The MOU specimen contains a numbered outline, not publication paragraphs.
+  outline_regions:
+    - pdf_page_range: [60, 62]
+      start_pattern: '^1\.0\s+Definitions$'
+      element_id: "MOU OUTLINE 1"
+      title: "Memorandum of understanding outline"

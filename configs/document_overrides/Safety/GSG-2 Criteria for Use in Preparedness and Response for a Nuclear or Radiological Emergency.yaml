@@ -1,0 +1,28 @@
+# Source review: physical PDF pages 28, 53 and 54, checked against rendered pages.
+# The same embedded Symbol encoding supplies the listed glyphs on the scoped pages.
+# Other unknown symbols (including diagram markers and equation pieces) are unchanged.
+parser:
+  font_decoders:
+  - pdf_pages:
+    - 28
+    fonts:
+    - Symbol
+    replacements:
+      : Δ
+      : ≥
+      : ≤
+  - pdf_pages:
+    - 43
+    - 53
+    - 54
+    - 55
+    - 59
+    - 87
+    - 96
+    fonts:
+    - Symbol
+    replacements:
+      : γ
+      : β
+      : α
+      : μ

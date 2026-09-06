@@ -10,3 +10,10 @@ document:
   document_type: "specific_safety_guide"
   sti_pub_number: "STI/PUB/1956"
   isbn_pdf: "978-92-0-121921-3"
+parser:
+  # Schedule paragraph numbers restart for each UN entry. Preserve the printed
+  # labels and attach a stable parent scope instead of inventing global IDs.
+  local_scope_patterns:
+    - pattern: '^SCHEDULE FOR UN (?P<scope>\d{4})(?::|$)'
+      id_template: 'UN {scope}'
+      case_sensitive: true
