@@ -1,2 +1,6 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "4f928b9b74096b9e6e442b4c44d94efbbb6a787d7f372735d7020e2738d11b0d"
+
 document:
   title: "Preparedness and Response for a Nuclear or Radiological Emergency"

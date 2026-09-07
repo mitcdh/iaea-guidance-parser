@@ -426,6 +426,16 @@ def _record_content_text(record: StructuralElement) -> str:
     if record.extra.get("table", {}).get("cells"):
         return _table_markdown(record)
     extras: list[str] = []
+    if record.extra.get("reviewed_image_transcriptions"):
+        extras.append("Source note: reviewed transcription of an image-only page.")
+    regions = record.extra.get("visual_text_regions", [])
+    if any(region.get("reviewed_layout") for region in regions):
+        extras.append(
+            "Figure text (positions and associations are retained in the canonical records):"
+        )
+        extras.extend(region["text"] for region in regions)
+        if any(region.get("transcription") for region in regions):
+            extras.append("Source note: includes reviewed transcription of image-only figure text.")
     if record.caption and record.caption not in record.text:
         extras.append(f"Caption: {record.caption}")
     if record.title and record.element_type == "table" and record.title not in record.text:
@@ -450,9 +460,16 @@ def _table_markdown(record: StructuralElement) -> str:
             if cell["column_span"] > 1:
                 attributes += f' colspan="{cell["column_span"]}"'
             content = escape(cell["text"]).replace("\n", "<br>")
+            if cell.get("background_color"):
+                attributes += f' style="background-color: {escape(cell["background_color"])}"'
+                content += " [shaded]"
             rows.append(f"<td{attributes}>{content}</td>")
         rows.append("</tr>")
     rows.append("</table>")
+    if any(cell.get("background_color") for cell in table["cells"]):
+        rows.extend(["", "[shaded] marks source cell shading; it is not printed cell text."])
+    if table.get("notes"):
+        rows.extend(["", table["notes"]])
     return "\n".join(rows)
 
 

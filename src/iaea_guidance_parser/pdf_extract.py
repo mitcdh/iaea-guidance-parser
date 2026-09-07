@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - exercised only in minimal test
     fitz = None
 
 from .models import PageText
+from .provenance import sha256_file
 from .rules import (
     CONTENTS_HEADING_RE,
     PAGE_NUMBER_RE,
@@ -37,6 +39,9 @@ class _RawPage:
     source_lines: list[dict[str, Any]] | None = None
     tables: dict[str, dict[str, Any]] | None = None
     figure_regions: list[dict[str, Any]] | None = None
+    source_typography: dict[int, list[dict[str, Any]]] = field(default_factory=dict)
+    figure_regions_by_caption: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    figure_warnings: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -45,6 +50,7 @@ class _LineInfo:
     bbox: tuple[float, float, float, float]
     predominantly_bold: bool
     predominantly_emphasized: bool
+    spans: tuple[dict[str, Any], ...] = ()
 
 
 def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -> list[PageText]:
@@ -55,18 +61,85 @@ def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -
         )
     doc = fitz.open(pdf_path)
     parser_config = parser_config or {}
+    transcriptions = parser_config.get("image_transcriptions", {})
+    if transcriptions and transcriptions.get("source_sha256") != sha256_file(pdf_path):
+        doc.close()
+        raise ValueError("Image transcriptions must match the source PDF SHA-256")
+    if any(n not in range(1, len(doc) + 1) for n in transcriptions.get("pages", {})):
+        doc.close()
+        raise ValueError("Image transcription page is outside the source PDF")
+    figure_layouts = parser_config.get("figure_layouts", {})
+    if figure_layouts and figure_layouts.get("source_sha256") != sha256_file(pdf_path):
+        doc.close()
+        raise ValueError("Reviewed figure layouts must match the source PDF SHA-256")
+    if any(n not in range(1, len(doc) + 1) for n in figure_layouts.get("pages", {})):
+        doc.close()
+        raise ValueError("Reviewed figure page is outside the source PDF")
     decoder_rules = parser_config.get("font_decoders", []) or []
     raw_pages: list[_RawPage] = []
     try:
         for idx, page in enumerate(doc):
             pdf_page = idx + 1
-            raw = _extract_page_text(page, pdf_page, decoder_rules)
+            if pdf_page in transcriptions.get("pages", {}):
+                transcript = transcriptions["pages"][pdf_page]
+                raw_pages.append(_transcribed_image_page(page, pdf_page, transcript))
+                continue
+            ignore_actual_text = pdf_page in parser_config.get("ignore_actual_text_pages", [])
+            raw = _extract_page_text(
+                page,
+                pdf_page,
+                decoder_rules,
+                sort_lines=pdf_page in parser_config.get("reading_order_pages", []),
+                ignore_actual_text=ignore_actual_text,
+            )
             lines = [normalize_text(line) for line in raw.splitlines()]
             lines = [line for line in lines if line]
-            line_info = _extract_line_info(page, pdf_page, decoder_rules)
+            line_info = _extract_line_info(
+                page, pdf_page, decoder_rules, ignore_actual_text=ignore_actual_text
+            )
+            rotation = parser_config.get("page_reading_rotations", {}).get(pdf_page, 0)
+            if rotation not in (0, 90, 180, 270):
+                raise ValueError("Page reading rotation must be a multiple of 90 degrees")
+            if rotation:
+                line_info.sort(key=lambda item: _reading_order_key(item, rotation))
             line_info, repaired_caption = _join_caption_fragments(line_info)
-            tables, table_indices = _extract_tables(page, line_info, pdf_page, decoder_rules)
-            suppressed_indices = _figure_interior_line_indices(page, line_info)
+            layouts = [
+                rule
+                for rule in parser_config.get("table_layouts", [])
+                if pdf_page in rule["pdf_pages"]
+            ]
+            if layouts:
+                tables, table_indices = _reviewed_table_layouts(
+                    page,
+                    line_info,
+                    pdf_page,
+                    decoder_rules,
+                    layouts,
+                    rotation,
+                    ignore_actual_text=ignore_actual_text,
+                )
+            else:
+                tables, table_indices = _extract_tables(
+                    page, line_info, pdf_page, decoder_rules, ignore_actual_text=ignore_actual_text
+                )
+            reviewed_figures = figure_layouts.get("pages", {}).get(pdf_page, [])
+            transcribed_regions = []
+            figure_owners, figure_warnings = {}, {}
+            if reviewed_figures:
+                suppressed_indices, transcribed_regions = _reviewed_figure_layouts(
+                    page, line_info, pdf_page, reviewed_figures
+                )
+                for index in suppressed_indices:
+                    rule = next(
+                        rule
+                        for rule in reviewed_figures
+                        if _inside(line_info[index].bbox, rule["bbox"])
+                    )
+                    figure_owners[index] = match_figure_label(rule["caption"]).canonical_id
+            else:
+                suppressed_indices = _figure_interior_line_indices(
+                    page, line_info, owners=figure_owners, warnings=figure_warnings
+                )
             # A table can contain diagrams or a figure reference. Its cells
             # already preserve the complete content and take precedence here.
             suppressed_indices -= set(table_indices)
@@ -75,7 +148,7 @@ def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -
                 for index, item in enumerate(line_info)
                 if index in suppressed_indices
             ]
-            if suppressed_indices or tables or repaired_caption:
+            if rotation or suppressed_indices or tables or repaired_caption:
                 # PyMuPDF's plain-text block order can place body prose before a
                 # diagram that is visually above it.  Geometry-sorted rich lines
                 # are authoritative on pages where a figure region was found.
@@ -115,6 +188,17 @@ def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -
                 for index, item in enumerate(line_info)
             ]
             figure_regions = [source_lines[index] for index in sorted(suppressed_indices)]
+            if reviewed_figures:
+                for region in figure_regions:
+                    region["reviewed_layout"] = True
+                figure_regions.extend(transcribed_regions)
+                suppressed_figure_lines.extend(region["text"] for region in transcribed_regions)
+            by_caption = {}
+            for index in sorted(suppressed_indices):
+                by_caption.setdefault(figure_owners[index], []).append(source_lines[index])
+            for region in transcribed_regions:
+                owner = region.pop("_owner_caption")
+                by_caption.setdefault(owner, []).append(region)
             raw_pages.append(
                 _RawPage(
                     pdf_page=pdf_page,
@@ -126,6 +210,9 @@ def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -
                     source_lines=source_lines,
                     tables=tables,
                     figure_regions=figure_regions,
+                    source_typography={i: list(item.spans) for i, item in enumerate(line_info)},
+                    figure_regions_by_caption=by_caption,
+                    figure_warnings=figure_warnings,
                 )
             )
     finally:
@@ -154,9 +241,50 @@ def extract_pages(pdf_path: Path, parser_config: dict[str, Any] | None = None) -
                 source_lines=raw_page.source_lines or [],
                 tables=raw_page.tables or {},
                 figure_regions=raw_page.figure_regions or [],
+                source_typography=raw_page.source_typography,
+                glossary_openings=_glossary_openings(raw_page.source_typography),
+                figure_regions_by_caption=raw_page.figure_regions_by_caption,
+                figure_warnings=raw_page.figure_warnings,
             )
         )
     return pages
+
+
+def _transcribed_image_page(page, pdf_page, transcript):
+    """Use an explicitly reviewed transcript only on a page with no PDF text.
+
+    Spans cover the whole source page: they do not claim glyph-level geometry.
+    The provenance travels with the records so this cannot look like extraction.
+    """
+    if page.get_text().strip() or not (page.get_image_info() or page.get_drawings()):
+        raise ValueError("Image transcription requires an image-only source page")
+    if not transcript.get("reviewer") or not transcript.get("notes"):
+        raise ValueError("Image transcription requires reviewer and source notes")
+    lines = [normalize_text(line) for line in transcript.get("lines", [])]
+    if not lines or not all(lines):
+        raise ValueError("Image transcription requires non-empty source lines")
+    provenance = {key: transcript[key] for key in ("reviewer", "notes")}
+    return _RawPage(
+        pdf_page=pdf_page,
+        lines=lines,
+        candidate=None,
+        bold_lines=[],
+        typographic_heading_lines=[],
+        suppressed_figure_lines=[],
+        source_lines=[
+            {
+                "pdf_page": pdf_page,
+                "line": index,
+                "bbox": list(page.rect),
+                "text": text,
+                "role": "reviewed_image_transcription",
+                "transcription": provenance,
+            }
+            for index, text in enumerate(lines)
+        ],
+        tables={},
+        figure_regions=[],
+    )
 
 
 def _validated_printed_page_candidates(
@@ -236,49 +364,67 @@ def _remove_printed_page_line(lines: list[str], candidate: _PrintedPageCandidate
     del lines[run_start:run_end]
 
 
-def _extract_page_text(page: Any, pdf_page: int, decoder_rules: list[dict[str, Any]]) -> str:
+def _extract_page_text(
+    page: Any,
+    pdf_page: int,
+    decoder_rules: list[dict[str, Any]],
+    *,
+    sort_lines: bool = False,
+    ignore_actual_text: bool = False,
+) -> str:
     applicable = [rule for rule in decoder_rules if _decoder_applies(rule, pdf_page)]
     if not applicable:
-        return page.get_text("text") or ""
+        flags = fitz.TEXTFLAGS_TEXT | fitz.TEXT_IGNORE_ACTUALTEXT if ignore_actual_text else None
+        return page.get_text("text", sort=sort_lines, flags=flags) or ""
 
     output_lines: list[str] = []
-    page_dict = page.get_text("dict", sort=True)
-    for block in page_dict.get("blocks", []):
-        for line in block.get("lines", []):
-            pieces: list[str] = []
-            prior_x1: float | None = None
-            for span in line.get("spans", []):
-                text = span.get("text", "")
-                rule = next(
-                    (item for item in applicable if _font_matches(item, span.get("font", ""))), None
-                )
-                if rule:
-                    text = _decode_font_span(text, rule)
-                x0 = float(span.get("bbox", (0, 0, 0, 0))[0])
-                if (
-                    prior_x1 is not None
-                    and x0 - prior_x1 > 2
-                    and pieces
-                    and not pieces[-1].endswith(" ")
-                ):
-                    pieces.append(" ")
-                pieces.append(text)
-                prior_x1 = float(span.get("bbox", (0, 0, 0, 0))[2])
-            if pieces:
-                output_lines.append("".join(pieces))
+    flags = fitz.TEXTFLAGS_DICT | fitz.TEXT_IGNORE_ACTUALTEXT if ignore_actual_text else None
+    page_dict = page.get_text("dict", sort=True, flags=flags)
+    lines = [line for block in page_dict.get("blocks", []) for line in block.get("lines", [])]
+    if sort_lines:
+        lines.sort(key=lambda line: (line["bbox"][1], line["bbox"][0]))
+    for line in lines:
+        pieces: list[str] = []
+        prior_x1: float | None = None
+        for span in line.get("spans", []):
+            text = span.get("text", "")
+            rule = next(
+                (item for item in applicable if _font_matches(item, span.get("font", ""))), None
+            )
+            if rule:
+                text = _decode_font_span(text, rule)
+            x0 = float(span.get("bbox", (0, 0, 0, 0))[0])
+            if (
+                prior_x1 is not None
+                and x0 - prior_x1 > 2
+                and pieces
+                and not pieces[-1].endswith(" ")
+            ):
+                pieces.append(" ")
+            pieces.append(text)
+            prior_x1 = float(span.get("bbox", (0, 0, 0, 0))[2])
+        if pieces:
+            output_lines.append("".join(pieces))
     return "\n".join(output_lines)
 
 
 def _extract_line_info(
-    page: Any, pdf_page: int, decoder_rules: list[dict[str, Any]], *, clip=None
+    page: Any,
+    pdf_page: int,
+    decoder_rules: list[dict[str, Any]],
+    *,
+    clip=None,
+    ignore_actual_text: bool = False,
 ) -> list[_LineInfo]:
     """Return normalized line typography and geometry without changing text order."""
     applicable = [rule for rule in decoder_rules if _decoder_applies(rule, pdf_page)]
     output: list[_LineInfo] = []
-    page_dict = page.get_text("dict", sort=True, clip=clip)
+    flags = fitz.TEXTFLAGS_DICT | fitz.TEXT_IGNORE_ACTUALTEXT if ignore_actual_text else None
+    page_dict = page.get_text("dict", sort=True, clip=clip, flags=flags)
     for block in page_dict.get("blocks", []):
         for line in block.get("lines", []):
             pieces: list[str] = []
+            source_spans = []
             prior_x1: float | None = None
             alphabetic_chars = 0
             bold_alphabetic_chars = 0
@@ -290,6 +436,17 @@ def _extract_line_info(
                 )
                 if rule:
                     text = _decode_font_span(text, rule)
+                source_spans.append(
+                    {
+                        "text": text,
+                        "original_text": str(span.get("text", "")),
+                        "font": str(span.get("font", "")),
+                        "size": float(span.get("size", 0)),
+                        "flags": int(span.get("flags", 0)),
+                        "origin": list(span.get("origin", (0, 0))),
+                        "bbox": list(span.get("bbox", (0, 0, 0, 0))),
+                    }
+                )
                 bbox = span.get("bbox", (0, 0, 0, 0))
                 x0 = float(bbox[0])
                 if (
@@ -324,9 +481,46 @@ def _extract_line_info(
                         alphabetic_chars >= 4
                         and emphasized_alphabetic_chars / alphabetic_chars >= 0.8
                     ),
+                    spans=tuple(source_spans),
                 )
             )
     return output
+
+
+def _glossary_openings(typography):
+    """Find bold term prefixes; the grammar only uses these inside a glossary."""
+    openings = {}
+    rows = {}
+    for spans in typography.values():
+        for span in spans:
+            rows.setdefault(round(span["origin"][1], 1), []).append(span)
+    for row in rows.values():
+        spans = sorted(row, key=lambda s: s["bbox"][0])
+        # A justified opening can consist of several separate PDF text objects.
+        spans = [dict(s) for s in spans]
+        for previous, current in zip(spans, spans[1:]):
+            if current["bbox"][0] - previous["bbox"][2] > 2:
+                previous["text"] += " "
+        prefix = []
+        for span in spans:
+            if not span["text"].strip():
+                continue
+            if not (span["flags"] & 16 or "bold" in span["font"].lower()):
+                break
+            prefix.append(span["text"])
+        title = normalize_text("".join(prefix))
+        whole = normalize_text("".join(s["text"] for s in spans))
+        if (
+            title.endswith(".")
+            and len(title.split()) <= 12
+            and title[:1].isalpha()
+            and not title.isupper()
+            and len(whole) > len(title)
+        ):
+            # Match the actual bold opening line, not the term in an italic
+            # continuation such as "authorization. An authorized person ...".
+            openings[title[:-1]] = whole
+    return openings
 
 
 def _typographic_heading_lines(lines: list[_LineInfo], suppressed_indices: set[int]) -> list[str]:
@@ -348,7 +542,70 @@ def _typographic_heading_lines(lines: list[_LineInfo], suppressed_indices: set[i
     return output
 
 
-def _figure_interior_line_indices(page: Any, lines: list[_LineInfo]) -> set[int]:
+def _reviewed_figure_layouts(page, lines, pdf_page, layouts):
+    """Keep reviewed diagram labels and notes with their exact source caption."""
+    captions = [item for item in lines if match_figure_label(normalize_text(item.text))]
+    expected = [normalize_text(rule["caption"]) for rule in layouts]
+    labels = [match_figure_label(item.text).canonical_id for item in captions]
+    if len(set(labels)) != len(labels):
+        raise ValueError("Reviewed figure ownership requires unique caption labels on a page")
+    if sorted(expected) != sorted(normalize_text(item.text) for item in captions):
+        raise ValueError("Reviewed figure layouts must match every caption on the page exactly")
+    selected, transcripts = set(), []
+    for rule in layouts:
+        caption = next(
+            item
+            for item in captions
+            if normalize_text(item.text) == normalize_text(rule["caption"])
+        )
+        rect = fitz.Rect(rule["bbox"])
+        if (
+            rect.is_empty
+            or rect.is_infinite
+            or not page.rect.contains(rect)
+            or rect.y1 > caption.bbox[1]
+        ):
+            raise ValueError(
+                "Reviewed figure rectangle must be inside the page and above its caption"
+            )
+        indices = {
+            i
+            for i, item in enumerate(lines)
+            if rect.contains(
+                fitz.Point((item.bbox[0] + item.bbox[2]) / 2, (item.bbox[1] + item.bbox[3]) / 2)
+            )
+        }
+        if selected & indices:
+            raise ValueError("Reviewed figure rectangles must not share source text")
+        selected.update(indices)
+        transcript = rule.get("transcription")
+        if transcript:
+            if not all(str(transcript.get(k, "")).strip() for k in ["text", "reviewer", "notes"]):
+                raise ValueError("Figure transcription requires text, reviewer and source notes")
+            text = normalize_text(transcript["text"])
+            if any(normalize_text(lines[i].text) == text for i in indices):
+                raise ValueError("Figure transcription duplicates native source text")
+            transcripts.append(
+                {
+                    "pdf_page": pdf_page,
+                    "bbox": list(rect),
+                    "text": text,
+                    "role": "figure",
+                    "_owner_caption": match_figure_label(rule["caption"]).canonical_id,
+                    "reviewed_layout": True,
+                    "transcription": {
+                        "reviewer": transcript["reviewer"],
+                        "notes": transcript["notes"],
+                        "geometry": "whole_reviewed_figure_region",
+                    },
+                }
+            )
+    return selected, transcripts
+
+
+def _figure_interior_line_indices(
+    page: Any, lines: list[_LineInfo], *, owners=None, warnings=None
+) -> set[int]:
     """Identify text encoded inside vector/image figures immediately above captions.
 
     Many IAEA diagrams are stored as hundreds of positioned text and vector
@@ -388,15 +645,27 @@ def _figure_interior_line_indices(page: Any, lines: list[_LineInfo]) -> set[int]
         if len(rect) == 4 and rect[2] > rect[0] and rect[3] > rect[1]:
             rectangles.append((rect[0], rect[1], rect[2], rect[3]))
 
-    regions: list[tuple[float, float, float, float]] = []
+    owners = owners if owners is not None else {}
+    warnings = warnings if warnings is not None else {}
+    regions = []
+    label_counts = Counter(match_figure_label(caption.text).canonical_id for caption in captions)
     for caption in captions:
+        label = match_figure_label(caption.text).canonical_id
+        if label_counts[label] > 1:
+            warnings.setdefault(
+                label, ["Unresolved figure ownership: repeated source caption label."]
+            )
+            continue
         caption_y = caption.bbox[1]
         candidates = [
             rect for rect in rectangles if rect[3] <= caption_y + 2 and caption_y - rect[3] <= 400
         ]
         if not candidates:
             continue
-        anchor = max(candidates, key=lambda rect: rect[3])
+        anchors = [
+            rect for rect in candidates if rect[2] >= caption.bbox[0] and rect[0] <= caption.bbox[2]
+        ]
+        anchor = max(anchors or candidates, key=lambda rect: rect[3])
         if caption_y - anchor[3] > 40:
             continue
         component = [anchor]
@@ -424,19 +693,38 @@ def _figure_interior_line_indices(page: Any, lines: list[_LineInfo]) -> set[int]
         bottom = max(rect[3] for rect in component)
         if (right - left) * (bottom - top) < page_area * 0.05:
             continue
-        regions.append((left, top, right, caption_y))
+        regions.append((left, top, right, caption_y, match_figure_label(caption.text).canonical_id))
 
     suppressed: set[int] = set()
     for index, item in enumerate(lines):
         centre_y = (item.bbox[1] + item.bbox[3]) / 2
         centre_x = (item.bbox[0] + item.bbox[2]) / 2
-        if any(
-            left <= centre_x <= right and top <= centre_y < bottom
-            for left, top, right, bottom in regions
-        ):
+        matches = [
+            owner
+            for left, top, right, bottom, owner in regions
+            if left <= centre_x <= right and top <= centre_y < bottom
+        ]
+        if not matches and not item.text.rstrip().endswith(".") and len(item.text.split()) <= 12:
+            # Short axis/legend labels can extend a little beyond the drawing.
+            # Never extend through a numbered paragraph or a source caption.
+            if not re.match(r"^\s*\d+\.\d+", item.text):
+                matches = [
+                    owner
+                    for left, top, right, bottom, owner in regions
+                    if left - 12 <= centre_x <= right + 12
+                    and top - 12 <= centre_y < bottom
+                    and (top <= centre_y or (item.bbox[2] >= left and item.bbox[0] <= right))
+                ]
+        if len(matches) == 1:
             normalized = normalize_text(item.text)
             if normalized and not match_figure_label(normalized):
                 suppressed.add(index)
+                owners[index] = matches[0]
+        elif len(matches) > 1 and not match_figure_label(item.text):
+            for owner in matches:
+                warnings.setdefault(owner, []).append(
+                    f"Unresolved figure ownership for source line {index}."
+                )
     return suppressed
 
 
@@ -472,6 +760,7 @@ def _join_caption_fragments(lines: list[_LineInfo]) -> tuple[list[_LineInfo], bo
             ),
             predominantly_bold=line.predominantly_bold,
             predominantly_emphasized=line.predominantly_emphasized,
+            spans=tuple(span for _, item in same_row for span in item.spans),
         )
         removed.update(i for i, _ in same_row if i != index)
     return [replacements.get(i, item) for i, item in enumerate(lines) if i not in removed], bool(
@@ -485,7 +774,161 @@ def _inside(bbox, container) -> bool:
     return container[0] - 1 <= x <= container[2] + 1 and container[1] - 1 <= y <= container[3] + 1
 
 
-def _extract_tables(page, lines, pdf_page, decoder_rules):
+def _reading_order_key(line, rotation):
+    """Sort in the viewed orientation while retaining original source coordinates."""
+    rect = fitz.Rect(line.bbox) * fitz.Matrix(rotation)
+    # Superscripts change the top of a line, but not its ordinary baseline.
+    return round(rect.y1, 1), rect.x0
+
+
+def _cell_shading(drawings, rect):
+    """Read solid rectangle fills individually: one PDF path may shade distant cells."""
+    interior = fitz.Rect(rect.x0 + 0.5, rect.y0 + 0.5, rect.x1 - 0.5, rect.y1 - 0.5)
+    color = None
+    for drawing in drawings:
+        if drawing.get("fill") is None:
+            continue
+        for item in drawing["items"]:
+            if item[0] != "re" or not item[1].contains(interior):
+                continue
+            if drawing.get("fill_opacity", 1) != 1:
+                raise ValueError("Reviewed cell shading requires an opaque fill")
+            if len(drawing["fill"]) != 3:
+                raise ValueError("Cell shading requires an RGB fill")
+            color = "#" + "".join(f"{round(channel * 255):02x}" for channel in drawing["fill"])
+    return color if color != "#ffffff" else None
+
+
+def _validate_grid(cells, row_count, column_count, bbox):
+    """A grid must cover each logical slot exactly once with source-bounded cells."""
+    occupied = set()
+    for cell in cells:
+        if not fitz.Rect(bbox).contains(fitz.Rect(cell["bbox"])):
+            raise ValueError("Reviewed cell rectangle must be inside its table")
+        slots = {
+            (r, c)
+            for r in range(cell["row"], cell["row"] + cell["row_span"])
+            for c in range(cell["column"], cell["column"] + cell["column_span"])
+        }
+        if not slots or occupied & slots:
+            raise ValueError("Reviewed table cells have empty or overlapping spans")
+        occupied.update(slots)
+    if occupied != {(r, c) for r in range(row_count) for c in range(column_count)}:
+        raise ValueError("Reviewed table cells must cover the declared grid exactly")
+
+
+def _reviewed_table_layouts(
+    page, lines, pdf_page, decoder_rules, layouts, rotation, *, ignore_actual_text=False
+):
+    """Read source-backed cell rectangles where printed rules omit logical subrows.
+
+    Geometry and spans are reviewed configuration; cell text always comes from
+    the source PDF. A complete non-overlapping logical grid is required.
+    """
+    tables, indices = {}, {}
+    for rule in layouts:
+        # Match the complete reviewed caption, including consecutive wrapped
+        # lines. A prefix alone must not consume a different table's caption.
+        candidates = []
+        for i, line in enumerate(lines):
+            text = normalize_text(line.text)
+            if not match_table_label(text):
+                continue
+            indices_for_caption = [i]
+            while rule["caption"].startswith(text):
+                if text == rule["caption"]:
+                    candidates.append(indices_for_caption)
+                    break
+                j = indices_for_caption[-1] + 1
+                if j == len(lines):
+                    break
+                previous = fitz.Rect(lines[j - 1].bbox) * fitz.Matrix(rotation)
+                following = fitz.Rect(lines[j].bbox) * fitz.Matrix(rotation)
+                same_row = (
+                    abs(following.y0 - previous.y0) <= 1.5
+                    and abs(following.y1 - previous.y1) <= 1.5
+                    and following.x0 >= previous.x1
+                )
+                next_row = following.y1 > previous.y1 and following.y0 - previous.y1 <= max(
+                    previous.height, following.height
+                )
+                if not (same_row or next_row):
+                    break
+                text += " " + normalize_text(lines[j].text)
+                indices_for_caption.append(j)
+        label = match_table_label(rule["caption"])
+        if len(candidates) != 1 or not label:
+            raise ValueError(f"Page {pdf_page}: reviewed table caption does not match source")
+        caption_indices = candidates[0]
+        bbox = fitz.Rect(rule["bbox"])
+        consumed = sorted(
+            set(caption_indices + [i for i, line in enumerate(lines) if _inside(line.bbox, bbox)])
+        )
+        if any(i in indices for i in consumed):
+            raise ValueError("Reviewed table layouts overlap")
+        cells, occupied = [], set()
+        shading = page.get_drawings() if rule.get("retain_cell_shading") else []
+        for spec in rule["cells"]:
+            rect = fitz.Rect(spec["bbox"])
+            if rect.is_empty or not bbox.contains(rect):
+                raise ValueError("Reviewed cell rectangle must be inside its table")
+            row, column = spec["row"], spec["column"]
+            row_span, column_span = spec.get("row_span", 1), spec.get("column_span", 1)
+            slots = {
+                (r, c)
+                for r in range(row, row + row_span)
+                for c in range(column, column + column_span)
+            }
+            if not slots or occupied & slots:
+                raise ValueError("Reviewed table cells have empty or overlapping spans")
+            occupied.update(slots)
+            cell_lines = _extract_line_info(
+                page, pdf_page, decoder_rules, clip=rect, ignore_actual_text=ignore_actual_text
+            )
+            cell_lines.sort(key=lambda item: _reading_order_key(item, rotation))
+            cells.append(
+                dict(
+                    row=row,
+                    column=column,
+                    row_span=row_span,
+                    column_span=column_span,
+                    bbox=list(rect),
+                    text="\n".join(normalize_text(line.text) for line in cell_lines),
+                )
+            )
+            if shading and (color := _cell_shading(shading, rect)):
+                cells[-1]["background_color"] = color
+        _validate_grid(cells, rule["row_count"], rule["column_count"], bbox)
+        token = f"[[TABLE:p{pdf_page}:{len(tables) + 1}]]"
+        tables[token] = dict(
+            element_id=f"TABLE {label.canonical_id}",
+            caption=rule["caption"],
+            source_label=label.raw_label,
+            label_style=label.style,
+            raw_text="\n".join(normalize_text(lines[i].text) for i in consumed),
+            pdf_page=pdf_page,
+            bbox=list(bbox),
+            layout="grid",
+            row_count=rule["row_count"],
+            column_count=rule["column_count"],
+            cells=cells,
+            source_spans=[
+                {"pdf_page": pdf_page, "line": i, "bbox": list(lines[i].bbox)} for i in consumed
+            ],
+        )
+        notes = [
+            normalize_text(lines[i].text)
+            for i in consumed
+            if i not in caption_indices
+            and not any(_inside(lines[i].bbox, cell["bbox"]) for cell in cells)
+        ]
+        if notes:
+            tables[token]["notes"] = "\n".join(notes)
+        indices.update({i: token for i in consumed})
+    return tables, indices
+
+
+def _extract_tables(page, lines, pdf_page, decoder_rules, *, ignore_actual_text=False):
     """Capture captioned grids before their numbered cells reach the grammar.
 
     Each physical page remains a separate fragment with the printed table ID.
@@ -499,6 +942,7 @@ def _extract_tables(page, lines, pdf_page, decoder_rules):
         return {}, {}
     tables = {}
     indices = {}
+    drawings = page.get_drawings()
     grids = [
         grid
         for grid in page.find_tables(strategy="lines_strict").tables
@@ -529,6 +973,7 @@ def _extract_tables(page, lines, pdf_page, decoder_rules):
         if not label:
             continue
         cells = []
+        warnings = []
         seen = set()
         rows = grid.rows if grid is not None else []
         rects = [rect for row in rows for rect in row.cells if rect]
@@ -539,7 +984,13 @@ def _extract_tables(page, lines, pdf_page, decoder_rules):
                 if rect is None or tuple(rect) in seen:
                     continue
                 seen.add(tuple(rect))
-                cell_lines = _extract_line_info(page, pdf_page, decoder_rules, clip=fitz.Rect(rect))
+                cell_lines = _extract_line_info(
+                    page,
+                    pdf_page,
+                    decoder_rules,
+                    clip=fitz.Rect(rect),
+                    ignore_actual_text=ignore_actual_text,
+                )
                 cells.append(
                     {
                         "row": row_index,
@@ -550,6 +1001,43 @@ def _extract_tables(page, lines, pdf_page, decoder_rules):
                         "bbox": list(rect),
                     }
                 )
+                try:
+                    color = _cell_shading(drawings, fitz.Rect(rect))
+                    if color:
+                        cells[-1]["background_color"] = color
+                except ValueError as error:
+                    warnings.append(f"Unresolved table shading: {error}")
+        if grid is not None:
+            try:
+                _validate_grid(cells, grid.row_count, grid.col_count, bbox)
+            except ValueError as error:
+                warnings.append(f"Unresolved table grid: {error}")
+                cells, grid = [], None
+        note_indices = []
+        bottom = bbox[3]
+        for i, item in enumerate(lines):
+            if not (
+                0 <= item.bbox[1] - bottom <= 18
+                and bbox[0] - 2 <= item.bbox[0]
+                and item.bbox[2] <= bbox[2] + 2
+            ):
+                continue
+            value = normalize_text(item.text)
+            if (not note_indices and not re.match(r"^Notes?:\s", value, re.I)) or (
+                note_indices
+                and (
+                    match_table_label(value)
+                    or match_figure_label(value)
+                    or re.match(r"^\d+\.", value)
+                    or item.predominantly_bold
+                )
+            ):
+                break
+            note_indices.append(i)
+            bottom = item.bbox[3]
+        if note_indices:
+            consumed = sorted(set(consumed + note_indices))
+            bbox = (bbox[0], bbox[1], bbox[2], bottom)
         token = f"[[TABLE:p{pdf_page}:{len(tables) + 1}]]"
         tables[token] = {
             "element_id": f"TABLE {label.canonical_id}",
@@ -566,6 +1054,12 @@ def _extract_tables(page, lines, pdf_page, decoder_rules):
             "source_spans": [
                 {"pdf_page": pdf_page, "line": i, "bbox": list(lines[i].bbox)} for i in consumed
             ],
+            **({"warnings": sorted(set(warnings))} if warnings else {}),
+            **(
+                {"notes": "\n".join(normalize_text(lines[i].text) for i in note_indices)}
+                if note_indices
+                else {}
+            ),
         }
         indices.update({i: token for i in consumed})
     return tables, indices

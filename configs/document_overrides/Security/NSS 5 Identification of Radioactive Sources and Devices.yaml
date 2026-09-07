@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "591182abe5020a0880d12390c8ef83965e472068ee93151cf0a627af5b4bf595"
+
 # Official source:
 # https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1278_web.pdf
 document:

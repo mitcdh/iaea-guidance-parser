@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -20,10 +21,22 @@ from typing import Any
 
 import fitz
 
+from .outline import structural_proof
 from .provenance import fingerprint, runtime_identity, sha256_file
+from .reviews import (
+    apply_dispositions,
+    content_fingerprint,
+    finding_id,
+    matching_review,
+    metadata_fingerprint,
+    validated_equivalent_review,
+)
 
 TOKEN_RE = re.compile(r"\w+(?:[.\-]\w+)*|[≤≥<>±=×÷/%+−]", re.UNICODE)
 SOURCE_CAPTION_RE = re.compile(r"^\s*(?:TABLE|FIG\.|Fig\.)\s+[\dA-ZIVXLC]", re.MULTILINE)
+SOURCE_FOOTNOTE_RE = re.compile(
+    r"""^[ \t]*(?:\d{1,2}|[*†‡])[ \t]+(?=[^\W\d_]|[‘“"'])""", re.MULTILINE
+)
 
 
 def tokens(text: str) -> list[str]:
@@ -33,7 +46,61 @@ def tokens(text: str) -> list[str]:
     return TOKEN_RE.findall(text.casefold())
 
 
-def _source_pages(pdf: Path) -> list[str]:
+DISPLAY_POLICY = "displayed-cropbox-v1"
+
+
+def displayed_page_text(pdf: Path, number: int) -> str:
+    """Clip Poppler text explicitly; -cropbox alone can retain opposing spread text."""
+    with fitz.open(pdf) as document:
+        if not 1 <= number <= len(document):
+            raise ValueError("Source page number must be inside the PDF")
+        page = document[number - 1]
+        media = fitz.Rect(0, 0, page.mediabox.width, page.mediabox.height)
+        crop = fitz.Rect(page.cropbox)
+        crop.x0 -= page.mediabox.x0
+        crop.x1 -= page.mediabox.x0
+        rotation = fitz.Matrix(page.rotation)
+        origin = (media * rotation).top_left
+        crop = crop * rotation
+        x, y = math.floor(crop.x0 - origin.x), math.floor(crop.y0 - origin.y)
+        width = math.ceil(crop.x1 - origin.x) - x
+        height = math.ceil(crop.y1 - origin.y) - y
+    result = subprocess.run(
+        [
+            "pdftotext",
+            "-f",
+            str(number),
+            "-l",
+            str(number),
+            "-r",
+            "72",
+            "-x",
+            str(x),
+            "-y",
+            str(y),
+            "-W",
+            str(width),
+            "-H",
+            str(height),
+            "-layout",
+            "-enc",
+            "UTF-8",
+            str(pdf),
+            "-",
+        ],
+        capture_output=True,
+        check=True,
+        timeout=180,
+    )
+    return result.stdout.decode("utf-8").removesuffix("\f")
+
+
+def _source_pages(pdf: Path, cache: Path | None = None) -> list[str]:
+    cached = cache / DISPLAY_POLICY / (sha256_file(pdf) + ".json") if cache else None
+    if cached and cached.exists():
+        payload = json.loads(cached.read_text())
+        if payload.get("text_sha256") == fingerprint(payload["pages"]):
+            return payload["pages"]
     completed = subprocess.run(
         ["pdftotext", "-layout", "-enc", "UTF-8", str(pdf), "-"],
         capture_output=True,
@@ -43,6 +110,15 @@ def _source_pages(pdf: Path) -> list[str]:
     pages = completed.stdout.decode("utf-8").split("\f")
     if pages and not pages[-1].strip():
         pages.pop()
+    with fitz.open(pdf) as document:
+        for number, page in enumerate(document, 1):
+            if page.cropbox != page.mediabox:
+                pages[number - 1] = displayed_page_text(pdf, number)
+    if cached:
+        cached.parent.mkdir(parents=True, exist_ok=True)
+        cached.write_text(
+            json.dumps({"pages": pages, "text_sha256": fingerprint(pages)}, ensure_ascii=False)
+        )
     return pages
 
 
@@ -88,13 +164,25 @@ def _source_path(entry, source_root, pdfs):
     return matches[0] if len(matches) == 1 else None
 
 
-def _page_risks(page, source_text, records, pdf_page, last_page, title):
+def _page_risks(page, source_text, records, pdf_page, last_page, title, source_heading=False):
     reasons = set()
     if SOURCE_CAPTION_RE.search(source_text):
         reasons.add("source_caption")
     if any(r["element_type"] in {"table", "figure"} for r in records):
         reasons.add("parsed_table_or_figure")
-    if any(r["element_type"] == "heading" for r in records):
+    # An outline proves headings, but cannot establish a note's source anchor.
+    if any(r["element_type"] == "footnote" for r in records):
+        reasons.add("footnote")
+    # Independent labels also catch notes that were absorbed into ordinary prose.
+    # Numbered lists may also match: ambiguity requires review, not a guessed role.
+    if SOURCE_FOOTNOTE_RE.search(source_text):
+        reasons.add("source_footnote_candidate")
+    # Bookmark headings do not prove individual term/definition relationships.
+    if any(r["source_region"] == "Glossary" for r in records) or re.search(
+        r"^\s*(?:DEFINITIONS|GLOSSARY)\s*$", source_text, re.MULTILINE
+    ):
+        reasons.add("definitions")
+    if source_heading or any(r["element_type"] == "heading" for r in records):
         reasons.add("structure")
     compact_source = " ".join(tokens(source_text))
     compact_title = " ".join(tokens(title))
@@ -136,8 +224,9 @@ def _page_risks(page, source_text, records, pdf_page, last_page, title):
     return reasons
 
 
-def _review_pages(pdf, entry, records, review_entries):
-    source = _source_pages(pdf)
+def _review_pages(pdf, entry, records, review_entries, metadata=None, cache=None):
+    metadata = metadata or {}
+    source = _source_pages(pdf, cache)
     doc_id = entry["document_id"]
     source_hash = sha256_file(pdf)
     by_page = defaultdict(list)
@@ -171,9 +260,39 @@ def _review_pages(pdf, entry, records, review_entries):
                     pdf=len(document),
                 )
             )
+        source_heading_pages = {entry[2] for entry in document.get_toc()}
         for number, page in enumerate(document, 1):
             source_text = source[number - 1] if number <= len(source) else ""
             page_records = by_page[number]
+            for record in page_records:
+                for note in record.get("parser_notes", []):
+                    if record["page_start_pdf"] == number and note.startswith(
+                        ("Unresolved figure", "Unresolved table")
+                    ):
+                        findings.append(
+                            _finding(
+                                doc_id,
+                                number,
+                                "layout_ownership_ambiguous",
+                                note,
+                                record_id=record["record_id"],
+                                element_id=record["element_id"],
+                            )
+                        )
+                if record["page_start_pdf"] == number and any(
+                    note.startswith("Unresolved PDF footnote anchor")
+                    for note in record.get("parser_notes", [])
+                ):
+                    findings.append(
+                        _finding(
+                            doc_id,
+                            number,
+                            "footnote_anchor_ambiguous",
+                            "PDF note has no uniquely supported inline anchor.",
+                            record_id=record["record_id"],
+                            element_id=record["element_id"],
+                        )
+                    )
             output_text = "\n".join(_record_source_text(r) for r in page_records)
             expected = Counter(tokens(source_text))
             available = Counter(tokens(output_text))
@@ -214,7 +333,14 @@ def _review_pages(pdf, entry, records, review_entries):
                 number,
                 len(document),
                 entry.get("document_title", ""),
+                source_heading=number in source_heading_pages,
             )
+            if any(
+                note.startswith("Unresolved")
+                for r in page_records
+                for note in r.get("parser_notes", [])
+            ):
+                risks.add("association")
             if missing:
                 risks.add("text_difference")
                 findings.append(
@@ -241,36 +367,71 @@ def _review_pages(pdf, entry, records, review_entries):
                         severity="high",
                     )
                 )
-            page_output_hash = fingerprint(page_records)
-            review = review_entries.get((doc_id, number), {})
-            reviewed = (
-                review.get("source_sha256") == source_hash
-                and review.get("output_sha256") == page_output_hash
-                and review.get("visual_review") == "reviewed"
-                and bool(review.get("notes"))
+            page_output_hash = content_fingerprint(page_records)
+            review = matching_review(
+                review_entries.get((doc_id, number), {}),
+                source_hash=source_hash,
+                records=page_records,
+                metadata=metadata,
             )
-            if reviewed:
-                for finding in findings:
-                    decision = review.get("dispositions", {}).get(finding["check"], {})
-                    if (
-                        finding["pdf_page"] == number
-                        and decision.get("reason")
-                        and decision.get("status")
-                        in {
-                            "corrected",
-                            "source_confirmed_false_positive",
-                            "intentional_exclusion",
-                            "unresolved",
-                        }
-                    ):
-                        finding["disposition"] = decision["status"]
-                        finding["review_reason"] = decision["reason"]
+            proof = (
+                structural_proof(document, number, page_records, source_text)
+                if risks == {"structure"}
+                else None
+            )
+            # Only this independently recomputed proof can establish automation.
+            if review and review["method"] == "automated_structural":
+                if not proof or review.get("evidence") != [proof]:
+                    review = None
+            if review and review["method"] == "equivalent_evidence":
+                reference_page = review.get("reference_pdf_page")
+                reference = matching_review(
+                    review_entries.get((doc_id, reference_page), {}),
+                    source_hash=source_hash,
+                    records=by_page.get(reference_page, []),
+                    metadata=metadata,
+                )
+                if not validated_equivalent_review(
+                    review,
+                    reference,
+                    target_records=page_records,
+                    reference_records=by_page.get(reference_page, []),
+                    metadata=metadata,
+                ):
+                    review = None
+            if not review and proof:
+                review = {
+                    "schema_version": 2,
+                    "method": "automated_structural",
+                    "verification_status": "verified",
+                    "notes": "Exact bookmark tree, wording, geometry, order and paths agree.",
+                    "evidence": [proof],
+                    "dispositions": {},
+                }
+            page_findings = [f for f in findings if f["pdf_page"] == number]
+            apply_dispositions(page_findings, review)
+            reviewed = bool(review and review["method"] == "visual")
+            method = review["method"] if review else ""
+            status = (
+                review["verification_status"] if review else "pending" if risks else "not_scheduled"
+            )
+            if (
+                any(f["disposition"] == "unresolved" for f in page_findings)
+                and status == "verified"
+            ):
+                status = "blocked"
             ledger.append(
                 {
                     "document_id": doc_id,
                     "pdf_page": number,
                     "source_sha256": source_hash,
                     "output_sha256": page_output_hash,
+                    "metadata_sha256": metadata_fingerprint(metadata),
+                    "verification_method": method,
+                    "verification_status": status,
+                    "verification_evidence": json.dumps(
+                        review.get("evidence", []) if review else [], ensure_ascii=False
+                    ),
                     "source_token_count": sum(expected.values()),
                     "missing_token_count": sum(missing.values()),
                     "excluded_margin_numerals": json.dumps(excluded, ensure_ascii=False),
@@ -279,10 +440,12 @@ def _review_pages(pdf, entry, records, review_entries):
                     "visual_reasons": ";".join(sorted(risks)),
                     "visual_review": "reviewed"
                     if reviewed
+                    else "not_required"
+                    if status == "verified"
                     else "pending"
                     if risks
                     else "not_scheduled",
-                    "notes": review.get("notes", "") if reviewed else "",
+                    "notes": review.get("notes", "") if review else "",
                 }
             )
     # Whole-document multiplicity catches duplication masked by page windows.
@@ -299,7 +462,28 @@ def _review_pages(pdf, entry, records, review_entries):
                 extra_tokens=dict(extra),
             )
         )
-    return ledger, findings
+    document_review = matching_review(
+        review_entries.get((doc_id, 0), {}),
+        source_hash=source_hash,
+        records=records,
+        metadata=metadata,
+    )
+    if document_review and document_review["method"] != "visual":
+        document_review = None
+    apply_dispositions([f for f in findings if f["pdf_page"] == 0], document_review)
+    document_coverage = {
+        "document_id": doc_id,
+        "pdf_page": 0,
+        "source_sha256": source_hash,
+        "output_sha256": content_fingerprint(records),
+        "metadata_sha256": metadata_fingerprint(metadata),
+        "metadata_verified": bool(document_review and document_review.get("metadata_verified")),
+        "boundaries_verified": bool(document_review and document_review.get("boundaries_verified")),
+        "verification_status": document_review["verification_status"]
+        if document_review
+        else "pending",
+    }
+    return ledger, findings, document_coverage
 
 
 def _check_exports(parsed, records_by_doc, entries):
@@ -440,6 +624,7 @@ def run_audit(
     """Audit one complete series; never rewrite or automatically repair records."""
     if not shutil.which("pdftotext"):
         raise RuntimeError("Source auditing requires Poppler's pdftotext executable.")
+    audit_runtime = runtime_identity()
     manifest_path = parsed / "series_manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     records_by_doc = _load_records(parsed / "series_structural_index.jsonl")
@@ -454,6 +639,7 @@ def run_audit(
     findings = _check_exports(parsed, records_by_doc, entries)
     represented = set()
     ledger = []
+    document_ledger = []
     for entry in entries:
         doc_id = entry["document_id"]
         if progress:
@@ -478,9 +664,19 @@ def run_audit(
                 )
             )
         try:
-            pages, page_findings = _review_pages(
-                pdf, entry, records_by_doc.get(doc_id, []), review_entries
+            from .series import safe_path_component
+
+            metadata_path = parsed / "documents" / safe_path_component(doc_id) / "metadata.json"
+            metadata = json.loads(metadata_path.read_text())
+            pages, page_findings, document_coverage = _review_pages(
+                pdf,
+                entry,
+                records_by_doc.get(doc_id, []),
+                review_entries,
+                metadata,
+                out / "source_text_cache",
             )
+            document_ledger.append(document_coverage)
             ledger.extend(pages)
             findings.extend(page_findings)
         except (subprocess.SubprocessError, OSError, RuntimeError, ValueError) as exc:
@@ -510,7 +706,15 @@ def run_audit(
                     path=str(path),
                 )
             )
+    for finding in findings:
+        finding["finding_id"] = finding_id(finding)
     summary = {
+        "verification_by_method": dict(
+            Counter(row["verification_method"] for row in ledger if row["verification_method"])
+        ),
+        "verification_by_status": dict(Counter(row["verification_status"] for row in ledger)),
+        "metadata_documents_verified": sum(r["metadata_verified"] for r in document_ledger),
+        "boundary_documents_verified": sum(r["boundaries_verified"] for r in document_ledger),
         "source_documents": len(pdfs),
         "manifest_documents": len(entries),
         "documents_checked": len({row["document_id"] for row in ledger}),
@@ -527,8 +731,11 @@ def run_audit(
         "visual_pages_pending": sum(row["visual_review"] == "pending" for row in ledger),
         "manifest_sha256": sha256_file(manifest_path),
         "records_sha256": sha256_file(parsed / "series_structural_index.jsonl"),
-        "audit_runtime": runtime_identity(),
+        "audit_runtime": audit_runtime,
     }
+    with (out / "audit_document_coverage.jsonl").open("w", encoding="utf-8") as stream:
+        for row in document_ledger:
+            stream.write(json.dumps(row, ensure_ascii=False) + "\n")
     (out / "audit_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     with (out / "audit_findings.jsonl").open("w", encoding="utf-8") as stream:
         for finding in findings:
@@ -546,6 +753,12 @@ def run_audit(
         f"Visual review: {summary['visual_pages_reviewed']} reviewed; {summary['visual_pages_pending']} pending.",
         "",
         "Token comparisons are screening evidence, not a semantic accuracy score. Page windows can overlap, and independent PDF engines can disagree. Inspect source images to resolve differences.",
+        "",
+        f"Verification methods: {summary['verification_by_method']}. Statuses: {summary['verification_by_status']}.",
+        "",
+        f"Document checks: metadata {summary['metadata_documents_verified']}; boundaries {summary['boundary_documents_verified']} of {len(document_ledger)} verified.",
+        "",
+        "Automated structural evidence is recorded separately from visual inspection. A recorded inspection can remain blocked by an unresolved finding.",
         "",
         "## Findings",
         "",

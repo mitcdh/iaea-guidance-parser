@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "16bbdf4ab6c2d197b4cce8e1f093bccca46550cc4b082a8e570f5a5529505ebe"
+
 document:
   title: "Combating Illicit Trafficking in Nuclear and Other Radioactive Material"
 parser:

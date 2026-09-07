@@ -1,0 +1,574 @@
+# Source-bound headings, note anchors, specimen numbering and matrix columns.
+match:
+  source_sha256: 4c8840e12a14a7d75f6100731d65e19f19b54b25c1ea98d4de0a7792aa3a0e13
+parser:
+  ignore_actual_text_pages:
+  - 2
+  - 39
+  - 40
+  - 41
+  reading_order_pages:
+  - 1
+  - 17
+  - 24
+  - 33
+  - 35
+  - 36
+  - 37
+  - 38
+  - 48
+  hyphenated_words:
+  - non-armed
+  - defence-in-depth
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    44: BackMatter
+    45: BackMatter
+    46: BackMatter
+    47: BackMatter
+    48: BackMatter
+  heading_continuations:
+  - pdf_pages:
+    - 17
+    lines:
+    - Description of roles and responsibilities during response to a nuclear
+    - security event
+  - pdf_pages:
+    - 35
+    lines:
+    - 1. Introduction
+  - pdf_pages:
+    - 35
+    lines:
+    - 2. Points of contact
+  - pdf_pages:
+    - 35
+    lines:
+    - 3. Initial notification
+  - pdf_pages:
+    - 35
+    lines:
+    - 3.1. Initial notification
+  - pdf_pages:
+    - 36
+    lines:
+    - 3.2. Response forces arrival
+  - pdf_pages:
+    - 36
+    lines:
+    - 4. Responsibilities
+  - pdf_pages:
+    - 36
+    lines:
+    - 4.1. Operators
+  - pdf_pages:
+    - 36
+    lines:
+    - 4.2. Response forces
+  - pdf_pages:
+    - 36
+    lines:
+    - 4.3. First response forces at the facility
+  - pdf_pages:
+    - 37
+    lines:
+    - 5. Security exercises
+  - pdf_pages:
+    - 37
+    lines:
+    - 5.1. Exercises
+  - pdf_pages:
+    - 37
+    lines:
+    - 5.2. Facility visits by response forces
+  - pdf_pages:
+    - 37
+    lines:
+    - 6. Communications
+  - pdf_pages:
+    - 37
+    lines:
+    - 6.1. Communication resources
+  - pdf_pages:
+    - 37
+    lines:
+    - 6.2. Maintenance of communications equipment
+  - pdf_pages:
+    - 37
+    lines:
+    - 6.3. Communications testing
+  - pdf_pages:
+    - 37
+    lines:
+    - 7. Limitations of liability, indemnification and insurance
+  - pdf_pages:
+    - 37
+    lines:
+    - 7.1. Response forces
+  - pdf_pages:
+    - 38
+    lines:
+    - 7.2. Facility
+  - pdf_pages:
+    - 38
+    lines:
+    - 8. Termination
+  - pdf_pages:
+    - 38
+    lines:
+    - 9. Agreement
+  subheading_parents:
+    2. DEVELOPING A CONTINGENCY PLAN:
+      Objective:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Physical layout of the nuclear facility, the local environment and potential targets:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Overview of the physical protection system:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      The application of the design basis threat or threat assessment:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Description of roles and responsibilities during response to a nuclear security event:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Criteria for the initiation of the contingency plan:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Rules of engagement:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Response planning:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      On-site response forces:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Protocols for off-site response:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Recapture and recovery:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+      Command, control and communication:
+      - ELEMENTS OF THE CONTINGENCY PLAN
+    Annex I:
+      Initiating event2:
+      - IMPLEMENTATION OF THE CONTINGENCY PLAN
+      Coordination of response actions:
+      - IMPLEMENTATION OF THE CONTINGENCY PLAN
+    Annex II:
+      1. Introduction:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      2. Points of contact:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      3. Initial notification:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      3.1. Initial notification:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 3. Initial notification
+      3.2. Response forces arrival:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 3. Initial notification
+      4. Responsibilities:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      4.1. Operators:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 4. Responsibilities
+      4.2. Response forces:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 4. Responsibilities
+      4.3. First response forces at the facility:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 4. Responsibilities
+      5. Security exercises:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      5.1. Exercises:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 5. Security exercises
+      5.2. Facility visits by response forces:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 5. Security exercises
+      6. Communications:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      6.1. Communication resources:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 6. Communications
+      6.2. Maintenance of communications equipment:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 6. Communications
+      6.3. Communications testing:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 6. Communications
+      7. Limitations of liability, indemnification and insurance:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      7.1. Response forces:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 7. Limitations of liability, indemnification and insurance
+      7.2. Facility:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      - 7. Limitations of liability, indemnification and insurance
+      8. Termination:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+      9. Agreement:
+      - BOX II–1. EXAMPLE MEMORANDUM OF UNDERSTANDING FOR OFF-SITE RESPONSE
+  footnote_pages:
+  - 11
+  - 14
+  - 15
+  - 29
+  - 31
+  footnote_anchors:
+  - pdf_pages:
+    - 15
+    footnote_id: '5'
+    element_id: '2.10'
+    text: used,5
+    section_path:
+    - 2. DEVELOPING A CONTINGENCY PLAN
+    - ELEMENTS OF THE CONTINGENCY PLAN
+  - pdf_pages:
+    - 31
+    footnote_id: '2'
+    element_id: null
+    text: Initiating event2
+    section_path:
+    - Annex I
+    - IMPLEMENTATION OF THE CONTINGENCY PLAN
+    - Initiating event2
+  local_scope_patterns:
+  - pdf_pages:
+    - 35
+    pattern: ^1\.\ Introduction$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 35
+    pattern: ^2\.\ Points\ of\ contact$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 35
+    pattern: ^3\.\ Initial\ notification$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 35
+    pattern: ^3\.1\.\ Initial\ notification$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 36
+    pattern: ^3\.2\.\ Response\ forces\ arrival$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 36
+    pattern: ^4\.\ Responsibilities$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 36
+    pattern: ^4\.1\.\ Operators$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 36
+    pattern: ^4\.2\.\ Response\ forces$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 36
+    pattern: ^4\.3\.\ First\ response\ forces\ at\ the\ facility$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^5\.\ Security\ exercises$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^5\.1\.\ Exercises$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^5\.2\.\ Facility\ visits\ by\ response\ forces$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^6\.\ Communications$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^6\.1\.\ Communication\ resources$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^6\.2\.\ Maintenance\ of\ communications\ equipment$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^6\.3\.\ Communications\ testing$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^7\.\ Limitations\ of\ liability,\ indemnification\ and\ insurance$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 37
+    pattern: ^7\.1\.\ Response\ forces$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 38
+    pattern: ^7\.2\.\ Facility$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 38
+    pattern: ^8\.\ Termination$
+    case_sensitive: true
+    id_template: BOX II–1
+  - pdf_pages:
+    - 38
+    pattern: ^9\.\ Agreement$
+    case_sensitive: true
+    id_template: BOX II–1
+  table_layouts:
+  - pdf_pages:
+    - 42
+    caption: TABLE IV–1. EXAMPLE MATRIX WITH STEPS FOR RESPONSE TO A NUCLEAR SECURITY
+      EVENT
+    bbox:
+    - 56
+    - 198
+    - 400
+    - 596
+    row_count: 4
+    column_count: 5
+    cells:
+    - row: 0
+      column: 0
+      column_span: 5
+      bbox:
+      - 56
+      - 232
+      - 400
+      - 256
+    - row: 1
+      column: 0
+      column_span: 5
+      bbox:
+      - 56
+      - 256
+      - 400
+      - 322
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 322
+      - 106
+      - 356
+    - row: 2
+      column: 1
+      bbox:
+      - 106
+      - 322
+      - 179
+      - 356
+    - row: 2
+      column: 2
+      bbox:
+      - 179
+      - 322
+      - 252
+      - 356
+    - row: 2
+      column: 3
+      bbox:
+      - 252
+      - 322
+      - 325
+      - 356
+    - row: 2
+      column: 4
+      bbox:
+      - 325
+      - 322
+      - 400
+      - 356
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 356
+      - 106
+      - 596
+    - row: 3
+      column: 1
+      bbox:
+      - 106
+      - 356
+      - 179
+      - 596
+    - row: 3
+      column: 2
+      bbox:
+      - 179
+      - 356
+      - 252
+      - 596
+    - row: 3
+      column: 3
+      bbox:
+      - 252
+      - 356
+      - 325
+      - 596
+    - row: 3
+      column: 4
+      bbox:
+      - 325
+      - 356
+      - 400
+      - 596
+  - pdf_pages:
+    - 43
+    caption: TABLE IV–1. EXAMPLE MATRIX WITH STEPS FOR RESPONSE TO A NUCLEAR SECURITY
+      EVENT (cont.)
+    bbox:
+    - 56
+    - 65
+    - 400
+    - 562
+    row_count: 5
+    column_count: 5
+    cells:
+    - row: 0
+      column: 0
+      column_span: 5
+      bbox:
+      - 56
+      - 99
+      - 400
+      - 123
+    - row: 1
+      column: 0
+      column_span: 5
+      bbox:
+      - 56
+      - 123
+      - 400
+      - 189
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 189
+      - 106
+      - 224
+    - row: 2
+      column: 1
+      bbox:
+      - 106
+      - 189
+      - 179
+      - 224
+    - row: 2
+      column: 2
+      bbox:
+      - 179
+      - 189
+      - 252
+      - 224
+    - row: 2
+      column: 3
+      bbox:
+      - 252
+      - 189
+      - 325
+      - 224
+    - row: 2
+      column: 4
+      bbox:
+      - 325
+      - 189
+      - 400
+      - 224
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 224
+      - 106
+      - 333
+    - row: 3
+      column: 1
+      bbox:
+      - 106
+      - 224
+      - 179
+      - 333
+    - row: 3
+      column: 2
+      bbox:
+      - 179
+      - 224
+      - 252
+      - 333
+    - row: 3
+      column: 3
+      bbox:
+      - 252
+      - 224
+      - 325
+      - 333
+    - row: 3
+      column: 4
+      bbox:
+      - 325
+      - 224
+      - 400
+      - 333
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 333
+      - 106
+      - 562
+    - row: 4
+      column: 1
+      bbox:
+      - 106
+      - 333
+      - 179
+      - 562
+    - row: 4
+      column: 2
+      bbox:
+      - 179
+      - 333
+      - 252
+      - 562
+    - row: 4
+      column: 3
+      bbox:
+      - 252
+      - 333
+      - 325
+      - 562
+    - row: 4
+      column: 4
+      bbox:
+      - 325
+      - 333
+      - 400
+      - 562

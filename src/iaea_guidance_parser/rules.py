@@ -33,7 +33,9 @@ TABLE_RE = re.compile(
     rf"^TABLE\s+(?P<num>{CAPTION_ID_PATTERN})(?P<terminator>[.:])\s*(?P<title>.*)"
 )
 TABLE_CONT_RE = re.compile(r"\(cont\.\)", flags=re.IGNORECASE)
-REFERENCE_ITEM_RE = re.compile(r"^\[(?P<num>\d+)\]\s*(?P<text>.*)")
+REFERENCE_ITEM_RE = re.compile(
+    rf"^\[(?P<num>(?:(?:[IVXLCDM]+|A){DASH_CLASS})?\d+)\]\s*(?P<text>.*)"
+)
 FOOTNOTE_RE = re.compile(r"^(?P<num>\d{1,2})\s+(?P<text>[A-Z‘“\"][^\n]{8,})")
 REQUIREMENT_RE = re.compile(
     r"^(?P<label>Requirement)\s+(?P<num>\d+[A-Z]?):\s*(?P<text>.*)", flags=re.IGNORECASE
@@ -43,7 +45,9 @@ PAGE_NUMBER_RE = re.compile(r"^(?P<num>\d{1,4})$")
 MAJOR_BODY_HEADING_RE = re.compile(r"^(?P<num>\d+)\.\s+(?P<title>[A-Z].*)")
 ANNEX_HEADING_RE = re.compile(r"^Annex(?:\s+(?P<num>[IVXLCDM]+))?\s*$", flags=re.IGNORECASE)
 APPENDIX_HEADING_RE = re.compile(r"^Appendix(?:\s+(?P<num>[IVXLCDM]+))?\s*$", flags=re.IGNORECASE)
-REFERENCES_HEADING_RE = re.compile(r"^REFERENCES\s*$")
+REFERENCES_HEADING_RE = re.compile(
+    r"^REFERENCES(?: TO (?P<scope>ANNEX|APPENDIX) (?:[IVXLCDM]+|\d+))?\s*$"
+)
 GLOSSARY_HEADING_RE = re.compile(r"^GLOSSARY\s*$")
 RELATED_PUBLICATIONS_RE = re.compile(r"^RELATED PUBLICATIONS\s*$")
 CONTENTS_HEADING_RE = re.compile(r"^CONTENTS\s*$")
@@ -51,6 +55,12 @@ BACKMATTER_HEADING_RE = re.compile(
     r"^(?:CONTRIBUTORS TO DRAFTING AND REVIEW|BODIES FOR THE ENDORSEMENT.*|ORDERING LOCALLY)\s*$",
     flags=re.IGNORECASE,
 )
+
+
+def is_prefixed_reference(line: str) -> bool:
+    """Identify annex/appendix citations before heading-line preparation."""
+    match = REFERENCE_ITEM_RE.match(line)
+    return bool(match and not match.group("num").isdigit())
 
 
 @dataclass(frozen=True)
@@ -196,6 +206,7 @@ KNOWN_DOCUMENT_CATEGORIES = {
 
 KNOWN_PUBLICATION_HEADINGS = {
     "IAEA NUCLEAR SECURITY SERIES",
+    "THE IAEA NUCLEAR SECURITY SERIES",
     "CATEGORIES IN THE IAEA NUCLEAR SECURITY SERIES",
     "IAEA SAFETY STANDARDS",
     "IAEA SAFETY STANDARDS SERIES",
@@ -239,6 +250,7 @@ def remove_pdf_line_breaks(
     *,
     structural_start: Callable[[str], bool] | None = None,
     preserve_after: Callable[[str], bool] | None = None,
+    hyphenated_words: tuple[str, ...] = (),
 ) -> list[str]:
     """Join lines that are likely PDF text-extraction wraps, not document breaks."""
     repaired: list[str] = []
@@ -252,7 +264,7 @@ def remove_pdf_line_breaks(
             structural_start=structural_start,
             preserve_after=preserve_after,
         ):
-            repaired[-1] = _join_wrapped_text(repaired[-1], line)
+            repaired[-1] = _join_wrapped_text(repaired[-1], line, hyphenated_words)
         else:
             repaired.append(line)
     return repaired
@@ -313,8 +325,19 @@ def _looks_like_wrapped_prose(previous: str, current: str) -> bool:
     return any(ch.isalpha() for ch in previous) and any(ch.isalpha() for ch in current)
 
 
-def _join_wrapped_text(previous: str, current: str) -> str:
-    if re.search(r"[a-z][-‑]$", previous) and re.match(r"^[a-z]", current):
+def _join_wrapped_text(previous: str, current: str, hyphenated_words: tuple[str, ...] = ()) -> str:
+    # A URL path's hyphen is literal, including before words such as "and".
+    if re.search(r"(?:https?://|www\.)\S*-$", previous):
+        return previous + current
+    left = re.search(r"\b([A-Za-z]+(?:[-‑][A-Za-z]+)*)[-‑]$", previous)
+    right = re.match(r"([A-Za-z]+(?:[-‑][A-Za-z]+)*)\b", current)
+    if left and right and f"{left[1]}-{right[1]}".replace("‑", "-") in hyphenated_words:
+        return previous + current
+    if (
+        re.search(r"[a-z][-‑]$", previous)
+        and re.match(r"^[a-z]", current)
+        and not re.match(r"^(?:and|or)\b", current)
+    ):
         return previous[:-1] + current
     return f"{previous} {current}"
 

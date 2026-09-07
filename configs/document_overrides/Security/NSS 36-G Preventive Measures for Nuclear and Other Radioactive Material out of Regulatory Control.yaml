@@ -1,17 +1,223 @@
+# Source-specific geometry and associations verified by Astra; matched by PDF hash.
+match:
+  source_sha256: b0ab8ed5c7a3db5689f81d7af1fb69a1028e6bdb3c4655dc5bfad9a1f734045f
 parser:
   label_exceptions:
-    - element_type: paragraph
-      pdf_page: 14
-      region: Body
-      raw_label: "2.5"
-      canonical_id: "2.5"
-    - element_type: paragraph
-      pdf_page: 16
-      region: Body
-      raw_label: "2.7"
-      canonical_id: "2.7"
-    - element_type: paragraph
-      pdf_page: 16
-      region: Body
-      raw_label: "2.8"
-      canonical_id: "2.8"
+  - element_type: paragraph
+    pdf_page: 14
+    region: Body
+    raw_label: '2.5'
+    canonical_id: '2.5'
+  - element_type: paragraph
+    pdf_page: 16
+    region: Body
+    raw_label: '2.7'
+    canonical_id: '2.7'
+  - element_type: paragraph
+    pdf_page: 16
+    region: Body
+    raw_label: '2.8'
+    canonical_id: '2.8'
+  ignore_actual_text_pages:
+  - 2
+  - 18
+  - 24
+  reading_order_pages:
+  - 43
+  - 44
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    39: BackMatter
+    40: BackMatter
+    41: BackMatter
+    42: BackMatter
+    43: BackMatter
+    44: BackMatter
+  heading_continuations:
+  - pdf_pages:
+    - 35
+    lines:
+    - 7. INTERNATIONAL COOPERATION AND
+    - ASSISTANCE TO STRENGTHEN PREVENTIVE
+    - MEASURES
+  subheading_parents:
+    2. GENERAL CONSIDERATIONS FOR PREVENTIVE MEASURES:
+      Legal and regulatory framework:
+      - BASIS FOR ESTABLISHING PREVENTIVE MEASURES
+      Competent authorities and coordination mechanism:
+      - BASIS FOR ESTABLISHING PREVENTIVE MEASURES
+      Threat assessment and risk informed approach:
+      - BASIS FOR ESTABLISHING PREVENTIVE MEASURES
+  footnote_pages:
+  - 19
+  - 37
+  table_layouts:
+  - pdf_pages:
+    - 20
+    caption: TABLE 1. TYPES OF ADVERSARY MOTIVATION
+    bbox:
+    - 56
+    - 86.8
+    - 400
+    - 223.1
+    row_count: 4
+    column_count: 2
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 86.8
+      - 145
+      - 110
+    - row: 0
+      column: 1
+      bbox:
+      - 145
+      - 86.8
+      - 400
+      - 110
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 110
+      - 145
+      - 145
+    - row: 1
+      column: 1
+      bbox:
+      - 145
+      - 110
+      - 400
+      - 145
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 145
+      - 145
+      - 179
+    - row: 2
+      column: 1
+      bbox:
+      - 145
+      - 145
+      - 400
+      - 179
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 179
+      - 145
+      - 223.1
+    - row: 3
+      column: 1
+      bbox:
+      - 145
+      - 179
+      - 400
+      - 223.1
+  - pdf_pages:
+    - 21
+    caption: TABLE 2. TYPES OF ADVERSARY CAPABILITY
+    bbox:
+    - 56
+    - 86.8
+    - 400
+    - 431.6
+    row_count: 6
+    column_count: 2
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 86.8
+      - 124
+      - 110
+    - row: 0
+      column: 1
+      bbox:
+      - 124
+      - 86.8
+      - 400
+      - 110
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 110
+      - 124
+      - 155
+    - row: 1
+      column: 1
+      bbox:
+      - 124
+      - 110
+      - 400
+      - 155
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 155
+      - 124
+      - 275
+    - row: 2
+      column: 1
+      bbox:
+      - 124
+      - 155
+      - 400
+      - 275
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 275
+      - 124
+      - 320
+    - row: 3
+      column: 1
+      bbox:
+      - 124
+      - 275
+      - 400
+      - 320
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 320
+      - 124
+      - 365
+    - row: 4
+      column: 1
+      bbox:
+      - 124
+      - 320
+      - 400
+      - 365
+    - row: 5
+      column: 0
+      bbox:
+      - 56
+      - 365
+      - 124
+      - 431.6
+    - row: 5
+      column: 1
+      bbox:
+      - 124
+      - 365
+      - 400
+      - 431.6

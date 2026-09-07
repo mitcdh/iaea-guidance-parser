@@ -894,3 +894,511 @@ def test_inline_figure_reference_is_not_a_caption_without_reviewed_exception():
 
     assert not [record for record in records if record.element_type == "figure"]
     assert "FIG. 1 shows" in _records_by_type(records, "paragraph")["1.1"].text
+
+
+def test_scoped_table_notes_do_not_enter_an_interrupted_paragraph():
+    pages = [
+        PageText(
+            pdf_page=1,
+            printed_page="1",
+            text="",
+            lines=[
+                "Appendix II",
+                "II.19. The criteria are conservative for many",
+                "TABLE 8. DEFAULT VALUES",
+                "Value A: 10",
+                "Value B: 20",
+            ],
+        ),
+        PageText(
+            pdf_page=2,
+            printed_page="2",
+            text="",
+            lines=[
+                "Note: The OILs should be revised after measurement.",
+                "a A note associated with a table value.",
+                "b A second table note.",
+            ],
+        ),
+        PageText(
+            pdf_page=3,
+            printed_page="3",
+            text="",
+            lines=[
+                "radionuclides and should be revised when further information becomes available.",
+                "II.20. The next paragraph begins here.",
+            ],
+        ),
+    ]
+    _, records = IAEAGuidanceParser(
+        _metadata(),
+        pages,
+        parser_config={
+            "outline_regions": [
+                {
+                    "pdf_pages": [2],
+                    "start_pattern": r"^Note:\s+The OILs",
+                    "element_id": "TABLE 8",
+                    "title": "Notes to TABLE 8",
+                }
+            ]
+        },
+    ).parse()
+    paragraph = next(r for r in records if r.element_id == "II.19")
+    notes = next(r for r in records if r.element_type == "table" and r.page_start_pdf == 2)
+    assert (
+        paragraph.text
+        == "The criteria are conservative for many radionuclides and should be revised when further information becomes available."
+    )
+    assert paragraph.page_start_pdf == 1 and paragraph.page_end_pdf == 3
+    assert notes.element_id == "TABLE 8"
+    assert "a A note" in notes.text and "b A second table note" in notes.text
+
+
+def test_reviewed_lettered_list_resumes_below_table_note_on_same_page():
+    pages = [
+        PageText(
+            pdf_page=1,
+            printed_page="1",
+            text="",
+            lines=[
+                "Annex XVII",
+                "XVII–15. Analyse the actions as follows:",
+                "(a) Evaluate the first action individually.",
+            ],
+        ),
+        PageText(
+            pdf_page=2,
+            printed_page="2",
+            text="",
+            lines=[
+                "TABLE XVII–5. EXAMPLE",
+                "Row 1: moderate",
+                "Note: Using expert judgement, assign a score.",
+                "This additional line belongs only to the table note.",
+                "(b)",
+                "Evaluate the next action.",
+                "(c)",
+                "Record the resulting system",
+            ],
+        ),
+        PageText(
+            pdf_page=3,
+            printed_page="3",
+            text="",
+            lines=[
+                "effectiveness and explain the result.",
+                "XVII–16. A separate paragraph.",
+            ],
+        ),
+    ]
+    config = {
+        "lettered_list_continuation_pages": [2],
+        "outline_regions": [
+            {
+                "pdf_pages": [2],
+                "start_pattern": r"^Note:\s+Using expert judgement",
+                "element_id": "TABLE XVII–5",
+                "title": "Notes to TABLE XVII–5",
+            }
+        ],
+    }
+    _, records = IAEAGuidanceParser(_metadata(), pages, parser_config=config).parse()
+    paragraph = next(r for r in records if r.element_id == "XVII–15")
+    note = next(r for r in records if r.title == "Notes to TABLE XVII–5")
+    assert paragraph.text == (
+        "Analyse the actions as follows: (a) Evaluate the first action individually. "
+        "(b) Evaluate the next action. (c) Record the resulting system "
+        "effectiveness and explain the result."
+    )
+    assert (paragraph.page_start_pdf, paragraph.page_end_pdf) == (1, 3)
+    assert " ".join(note.text.split()) == (
+        "Note: Using expert judgement, assign a score. "
+        "This additional line belongs only to the table note."
+    )
+    assert next(r for r in records if r.element_id == "XVII–16").text == "A separate paragraph."
+
+
+def test_lettered_list_continuation_is_scoped_and_requires_next_label():
+    for enabled, continuation, should_resume in [
+        (False, "(b) Second action.", False),
+        (True, "(b) Second action.", True),
+        (True, "(a) A new list.", False),
+        (True, "(d) A skipped label.", False),
+        (True, "For another purpose.", False),
+    ]:
+        pages = [
+            PageText(
+                pdf_page=1,
+                printed_page="1",
+                text="",
+                lines=[
+                    "2. EXAMPLE",
+                    "2.1. Steps: (a) First action.",
+                ],
+            ),
+            PageText(
+                pdf_page=2,
+                printed_page="2",
+                text="",
+                lines=[
+                    "FIG. 1. Example diagram.",
+                    continuation,
+                    "2.2. Next paragraph.",
+                ],
+            ),
+        ]
+        config = {"lettered_list_continuation_pages": [2] if enabled else [3]}
+        _, records = IAEAGuidanceParser(_metadata(), pages, parser_config=config).parse()
+        paragraph = next(r for r in records if r.element_id == "2.1")
+        assert (continuation in paragraph.text) == should_resume
+
+
+def test_configured_heading_continuation_requires_exact_lines_and_page():
+    lines = [
+        "3. ESSENTIAL ELEMENTS",
+        "ESSENTIAL ELEMENT 12: SUSTAINING A NUCLEAR SECURITY",
+        "REGIME",
+        "3.12. A regime contributes to sustainability.",
+    ]
+    joined = " ".join(lines[1:3])
+    for rule_page, fragments, expected in [
+        (1, lines[1:3], True),
+        (2, lines[1:3], False),
+        (1, [lines[1], "OTHER"], False),
+    ]:
+        records = _parse(
+            ["1. INTRODUCTION", "1.1. Introduction.", *lines],
+            parser_config={
+                "heading_continuations": [{"pdf_pages": [rule_page], "lines": fragments}]
+            },
+        )
+        assert any(r.element_type == "heading" and r.text == joined for r in records) == expected
+        paragraph = next(r for r in records if r.element_id == "3.12")
+        assert (joined in paragraph.section_path) == expected
+
+
+def test_configured_mixed_case_heading_separates_a_principle_from_its_explanation():
+    title = "Principle 1: Responsibility for safety"
+    for enabled in (False, True):
+        records = _parse(
+            [
+                "1. INTRODUCTION",
+                "1.1. Introduction.",
+                "3. SAFETY PRINCIPLES",
+                "3.2. The preceding paragraph ends here.",
+                title,
+                "The prime responsibility for safety must rest with the operator.",
+                "3.3. The explanation follows.",
+            ],
+            parser_config={
+                "heading_continuations": [{"pdf_pages": [1 if enabled else 2], "lines": [title]}]
+            },
+        )
+        prior = next(r for r in records if r.element_id == "3.2")
+        following = next(r for r in records if r.element_id == "3.3")
+        assert (title in prior.text) != enabled
+        assert (title in following.section_path) == enabled
+        if enabled:
+            statement = next(r for r in records if r.element_type == "text_block")
+            assert statement.text.startswith("The prime responsibility")
+            assert statement.section_path == ["3. SAFETY PRINCIPLES", title]
+            assert statement.text_status == "Normative"
+
+
+def test_reviewed_publisher_citation_is_a_footnote_not_page_furniture():
+    records = _parse(
+        [
+            "FOREWORD",
+            "A source publication was issued in 19931.",
+            "1 INTERNATIONAL ATOMIC ENERGY AGENCY, The Safety of Nuclear",
+            "Installations, Safety Series No. 110, IAEA, Vienna (1993).",
+        ],
+        parser_config={
+            "footnote_anchors": [
+                {"pdf_pages": [1], "footnote_id": "1", "element_id": None, "text": "19931"}
+            ]
+        },
+    )
+    note = next(r for r in records if r.element_type == "footnote")
+    assert note.text.startswith("INTERNATIONAL ATOMIC ENERGY AGENCY")
+    assert note.text.endswith("Vienna (1993).")
+    assert note.extra["source_anchor"]["text"] == "19931"
+    assert note.section_path == ["FOREWORD"]
+
+
+def test_configured_backmatter_title_remains_the_parent_of_committee_headings():
+    title = "BODIES FOR THE ENDORSEMENT OF IAEA SAFETY STANDARDS"
+    records = _parse(
+        [
+            "1. INTRODUCTION",
+            "1.1. Introduction.",
+            title,
+            "Commission on Safety Standards",
+            "Country: Example Person.",
+        ],
+        parser_config={
+            "page_regions": {1: {"region": "BackMatter", "section": title}},
+            "heading_continuations": [
+                {"pdf_pages": [1], "lines": ["Commission on Safety Standards"]}
+            ],
+        },
+    )
+    roster = next(r for r in records if r.text == "Country: Example Person.")
+    assert roster.section_path == [title, "Commission on Safety Standards"]
+    assert roster.source_region == "BackMatter"
+
+
+def test_glossary_boundaries_preserve_terms_continuations_and_footnote_links():
+    pages = [
+        PageText(1, "1", "", ["1. INTRODUCTION", "1.1. Ordinary prose."]),
+        PageText(
+            2,
+            "2",
+            "",
+            [
+                "DEFINITIONS",
+                "This section defines the terms used in the publication.",
+                "radioactive material. Material covered by the current",
+            ],
+        ),
+        PageText(
+            3,
+            "3",
+            "",
+            [
+                "International Basic Safety Standards2.",
+                "regulatory body. An authority that oversees facilities.",
+                "Its mandate concerns",
+                "radioactive material. This mention does not start a new definition.",
+                "2 At the time of publication, the cited edition was current.",
+            ],
+        ),
+        PageText(4, None, "", []),
+        PageText(5, None, "", ["Orders may be sent to the publisher at 39 Alexandra Road."]),
+    ]
+    config = {
+        "page_regions": {2: "Glossary", 5: "BackMatter"},
+        "footnote_pages": [3],
+        "glossary_terms": {
+            "radioactive material": "radioactive material. Material covered by the current",
+            "regulatory body": "regulatory body. An authority that oversees facilities.",
+        },
+        "footnote_anchors": [
+            {
+                "pdf_pages": [3],
+                "footnote_id": "2",
+                "element_id": "radioactive material",
+                "text": "International Basic Safety Standards2.",
+            }
+        ],
+    }
+    _, records = IAEAGuidanceParser(_metadata(), pages, parser_config=config).parse()
+    definition = next(r for r in records if r.element_id == "radioactive material")
+    assert (
+        definition.text
+        == "radioactive material. Material covered by the current International Basic Safety Standards2."
+    )
+    assert definition.source_region == "Glossary"
+    assert definition.text_status == "Informational"
+    assert (definition.page_start_pdf, definition.page_end_pdf) == (2, 3)
+    assert (definition.page_start_printed, definition.page_end_printed) == ("2", "3")
+    assert next(r for r in records if r.element_id == "regulatory body").page_start_pdf == 3
+    assert len([r for r in records if r.element_id == "radioactive material"]) == 1
+    assert "This mention" in next(r for r in records if r.element_id == "regulatory body").text
+    footnote = next(r for r in records if r.element_type == "footnote")
+    assert footnote.linked_from_element_id == definition.element_id
+    assert footnote.extra["source_anchor"] == config["footnote_anchors"][0]
+    assert footnote.source_region == "Glossary"
+    assert len([r for r in records if r.element_type == "footnote"]) == 1
+    assert records.index(
+        next(r for r in records if r.element_id == "regulatory body")
+    ) < records.index(footnote)
+    ordering = next(r for r in records if "Orders may" in r.text)
+    assert "39 Alexandra Road" in ordering.text
+    assert ordering.source_region == "BackMatter"
+    assert ordering.page_start_pdf == ordering.page_end_pdf == 5
+    assert not any(r.page_start_pdf < 5 <= r.page_end_pdf for r in records)
+
+
+def test_footer_notes_follow_complete_prose_without_breaking_cross_page_continuation():
+    pages = [
+        PageText(1, "1", "", ["1. INTRODUCTION", "1.1. The scope1 includes", "1 The first note."]),
+        PageText(2, "2", "", ["material2 and facilities.", "2 The second note."]),
+        PageText(3, "3", "", ["1.2. The next paragraph."]),
+    ]
+    _, records = IAEAGuidanceParser(_metadata(), pages).parse()
+    prose_and_notes = [r for r in records if r.element_type != "heading"]
+    assert [r.element_id for r in prose_and_notes] == ["1.1", "1", "2", "1.2"]
+    paragraph, first_note, second_note, _ = prose_and_notes
+    assert paragraph.text == "The scope1 includes material2 and facilities."
+    assert (paragraph.page_start_pdf, paragraph.page_end_pdf) == (1, 2)
+    assert (first_note.page_start_pdf, second_note.page_start_pdf) == (1, 2)
+    assert first_note.linked_from_element_id == second_note.linked_from_element_id == "1.1"
+    assert first_note.text == "The first note."
+    assert second_note.text == "The second note."
+
+
+def test_footnote_anchor_override_is_bound_to_its_label_and_page():
+    lines = [
+        "1. INTRODUCTION",
+        "1.1. An anchored statement.1",
+        "1.2. A later paragraph.",
+        "1 A note that belongs to the first paragraph.",
+    ]
+    for page, label, expected in [(1, "1", "1.1"), (2, "1", "1.2"), (1, "2", "1.2")]:
+        records = _parse(
+            lines,
+            parser_config={
+                "footnote_anchors": [
+                    {
+                        "pdf_pages": [page],
+                        "footnote_id": label,
+                        "element_id": "1.1",
+                        "text": "An anchored statement.1",
+                    }
+                ]
+            },
+        )
+        footnote = next(r for r in records if r.element_type == "footnote")
+        assert footnote.linked_from_element_id == expected
+
+
+def test_footnote_anchor_retains_its_section_after_a_later_heading():
+    path = ["1. INTRODUCTION", "SCOPE"]
+    records = _parse(
+        [
+            "1. INTRODUCTION",
+            "SCOPE",
+            "1.1. A statement with a note.1",
+            "OBJECTIVE",
+            "1.2. Another statement in the next subsection.",
+            "1 A note belonging to the scope statement.",
+        ],
+        parser_config={
+            "footnote_anchors": [
+                {"pdf_pages": [1], "footnote_id": "1", "element_id": "1.1", "section_path": path}
+            ]
+        },
+    )
+    footnote = next(r for r in records if r.element_type == "footnote")
+    assert footnote.linked_from_element_id == "1.1"
+    assert footnote.section_path == path
+    later = next(r for r in records if r.element_id == "1.2")
+    assert later.section_path == ["1. INTRODUCTION", "OBJECTIVE"]
+
+
+def test_reviewed_url_note_after_references_keeps_its_body_association():
+    lines = [
+        "1. INTRODUCTION",
+        "1.1. Consult the database2.",
+        "REFERENCES",
+        "[1] A publication citation, Vienna (2019).",
+        "2 https://example.org/database",
+    ]
+    for page, label in [(1, "2"), (2, "2"), (1, "3")]:
+        records = _parse(
+            lines,
+            parser_config={
+                "footnote_anchors": [
+                    {
+                        "pdf_pages": [page],
+                        "footnote_id": label,
+                        "element_id": "1.1",
+                        "section_path": ["1. INTRODUCTION"],
+                        "source_region": "Body",
+                    }
+                ]
+            },
+        )
+        reference = next(r for r in records if r.element_type == "reference")
+        notes = [r for r in records if r.element_type == "footnote"]
+        if (page, label) == (1, "2"):
+            assert reference.text == "A publication citation, Vienna (2019)."
+            assert len(notes) == 1
+            note = notes[0]
+            assert note.text == "https://example.org/database"
+            assert note.element_id == "2" and note.linked_from_element_id == "1.1"
+            assert note.source_region == "Body"
+            assert note.section_path == ["1. INTRODUCTION"]
+            assert note.page_start_pdf == note.page_end_pdf == 1
+            assert records.index(reference) < records.index(note)
+        else:
+            assert not notes
+            assert reference.text.endswith("2 https://example.org/database")
+
+
+def test_reviewed_subheading_parents_preserve_nested_paths_within_their_section():
+    records = _parse(
+        [
+            "1. INTRODUCTION",
+            "GENERAL RECOMMENDATIONS",
+            "General context.",
+            "SECURITY SYSTEM",
+            "Systems address detection and delay.",
+            "DETECTION",
+            "1.1. Detection measures.",
+            "DELAY",
+            "1.2. Delay measures.",
+            "OTHER RECOMMENDATIONS",
+            "1.3. Another subsection.",
+            "2. NEXT SECTION",
+            "DETECTION",
+            "2.1. A different use of the same heading.",
+        ],
+        parser_config={
+            "subheading_parents": {
+                "1. INTRODUCTION": {
+                    "SECURITY SYSTEM": ["GENERAL RECOMMENDATIONS"],
+                    "DETECTION": ["GENERAL RECOMMENDATIONS", "SECURITY SYSTEM"],
+                    "DELAY": ["GENERAL RECOMMENDATIONS", "SECURITY SYSTEM"],
+                }
+            }
+        },
+    )
+    paths = {r.element_id: r.section_path for r in records if r.element_type == "paragraph"}
+    assert paths["1.1"] == [
+        "1. INTRODUCTION",
+        "GENERAL RECOMMENDATIONS",
+        "SECURITY SYSTEM",
+        "DETECTION",
+    ]
+    assert paths["1.2"][-3:] == ["GENERAL RECOMMENDATIONS", "SECURITY SYSTEM", "DELAY"]
+    assert paths["1.3"] == ["1. INTRODUCTION", "OTHER RECOMMENDATIONS"]
+    assert paths["2.1"] == ["2. NEXT SECTION", "DETECTION"]
+
+
+def test_repeated_subheading_uses_its_reviewed_parent_on_each_source_page():
+    major = "4. PROTECTION REQUIREMENTS"
+    pages = [
+        PageText(
+            1,
+            "1",
+            "",
+            [
+                "1. INTRODUCTION",
+                "1.1. Context.",
+                major,
+                "Requirements for the State",
+                "4.1. The first task.",
+            ],
+        ),
+        PageText(2, "2", "", ["Requirements for the State", "4.2. The later task."]),
+    ]
+    config = {
+        "heading_continuations": [{"pdf_pages": [1, 2], "lines": ["Requirements for the State"]}],
+        "subheading_parents": {
+            major: {"Requirements for the State": {1: ["PREVENTION"], 2: ["RESPONSE"]}}
+        },
+    }
+    _, records = IAEAGuidanceParser(_metadata(), pages, parser_config=config).parse()
+    assert next(r for r in records if r.element_id == "4.1").section_path == [
+        major,
+        "PREVENTION",
+        "Requirements for the State",
+    ]
+    assert next(r for r in records if r.element_id == "4.2").section_path == [
+        major,
+        "RESPONSE",
+        "Requirements for the State",
+    ]

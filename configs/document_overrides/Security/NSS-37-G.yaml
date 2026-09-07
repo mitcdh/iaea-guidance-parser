@@ -1,0 +1,282 @@
+# Reviewed source headings, definitions, table cells and footnote associations.
+match:
+  source_sha256: 8fcba62c3adba727b2404438fa9af35a76f04e3e7fc434e31f51bd5b138f3683
+parser:
+  ignore_actual_text_pages:
+  - 2
+  - 21
+  - 22
+  - 43
+  - 49
+  - 50
+  reading_order_pages:
+  - 1
+  - 44
+  - 49
+  - 55
+  - 56
+  hyphenated_words:
+  - multi-agency
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    49: Glossary
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    10: FrontMatter
+    53: BackMatter
+    54: BackMatter
+    55: BackMatter
+    56: BackMatter
+  heading_continuations:
+  - pdf_pages:
+    - 26
+    lines:
+    - 4. DESIGNING A NATIONAL FRAMEWORK
+    - FOR MANAGING THE RESPONSE TO NUCLEAR
+    - SECURITY EVENTS
+  - pdf_pages:
+    - 37
+    lines:
+    - 5. INFRASTRUCTURE FOR A NATIONAL
+    - FRAMEWORK FOR MANAGING THE RESPONSE TO
+    - NUCLEAR SECURITY EVENTS
+  - pdf_pages:
+    - 39
+    lines:
+    - 6. INTERNATIONAL
+    - COOPERATION AND ASSISTANCE
+  subheading_parents:
+    3. TYPES OF NUCLEAR SECURITY EVENT AND PLANNING OF RESPONSE RESOURCES:
+      Type 1 nuclear security event:
+      - TYPES OF NUCLEAR SECURITY EVENT
+      Type 2 nuclear security event:
+      - TYPES OF NUCLEAR SECURITY EVENT
+      Type 3 nuclear security event:
+      - TYPES OF NUCLEAR SECURITY EVENT
+      Local resources:
+      - RESOURCES
+      National resources:
+      - RESOURCES
+      International resources:
+      - RESOURCES
+  footnote_pages:
+  - 11
+  - 12
+  - 19
+  - 43
+  - 51
+  footnote_anchors:
+  - pdf_pages:
+    - 11
+    footnote_id: '2'
+    element_id: '1.3'
+    text: 1)2
+    section_path:
+    - 1. INTRODUCTION
+    - BACKGROUND
+  glossary_terms:
+    associated activity: associated activity. The possession, production, processing,
+      use,
+    associated facility: associated facility. A facility (including associated buildings
+      and equipment)
+    authorization: authorization. The granting by a competent authority of written
+      permission for
+    competent authority: competent authority. A governmental organization or institution
+      that has been
+    contingency plan: contingency plan. Predefined sets of actions for response to
+      unauthorized acts
+    emergency: emergency. A non-routine situation or event that necessitates prompt
+      action,
+    emergency response: emergency response. The performance of actions to mitigate
+      the consequences
+    graded approach: graded approach. The application of nuclear security measures
+      proportionate
+    nuclear facility: nuclear facility. A facility (including associated buildings
+      and equipment) in
+    nuclear material: nuclear material. Any material that is either special fissionable
+      material or
+    nuclear or radiological emergency: nuclear or radiological emergency. An emergency
+      in which there is, or is
+    nuclear security event: nuclear security event. An event that has potential or
+      actual implications for
+    nuclear security regime: 'nuclear security regime. A regime comprising:'
+    operator: operator. Any person, organization or government entity licensed or
+      authorized
+    other radioactive material: other radioactive material. Any radioactive material
+      that is not nuclear material.
+    out of regulatory control: out of regulatory control. See regulatory control.
+    radiation exposure device (RED): radiation exposure device (RED). A device with
+      radioactive material designed
+    radioactive material: radioactive material. Any material designated in national
+      law, regulation or
+    radiological dispersal device (RDD): radiological dispersal device (RDD). A device
+      to spread radioactive material
+    regulatory control: regulatory control. Any form of institutional control applied
+      to nuclear material
+    risk: risk. The potential for an unwanted outcome resulting from a nuclear security
+    risk assessment: risk assessment. The overall process of systematically identifying,
+      estimating,
+    sabotage: sabotage. Any deliberate act directed against an associated facility
+      or associated
+    sensitive information: sensitive information. Information, in whatever form, including
+      software, whose
+    strategic location: strategic location. A location of high security interest in
+      the State which is
+    target: target. Nuclear material, other radioactive material, associated facilities,
+    threat assessment: threat assessment. An evaluation of the threats — based on
+      available intelligence,
+  table_layouts:
+  - pdf_pages:
+    - 30
+    caption: TABLE 1. EXAMPLES OF FUNCTIONAL OUTCOMES AND ASSOCIATED RESPONSE ACTIONS
+    bbox:
+    - 56
+    - 100
+    - 400
+    - 594
+    row_count: 5
+    column_count: 2
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 100
+      - 124
+      - 134
+    - row: 0
+      column: 1
+      bbox:
+      - 124
+      - 100
+      - 400
+      - 134
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 134
+      - 124
+      - 190
+    - row: 1
+      column: 1
+      bbox:
+      - 124
+      - 134
+      - 400
+      - 190
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 190
+      - 124
+      - 375
+    - row: 2
+      column: 1
+      bbox:
+      - 124
+      - 190
+      - 400
+      - 375
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 375
+      - 124
+      - 517
+    - row: 3
+      column: 1
+      bbox:
+      - 124
+      - 375
+      - 400
+      - 517
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 517
+      - 124
+      - 594
+    - row: 4
+      column: 1
+      bbox:
+      - 124
+      - 517
+      - 400
+      - 594
+  - pdf_pages:
+    - 31
+    caption: TABLE 1. EXAMPLES OF FUNCTIONAL OUTCOMES AND ASSOCIATED RESPONSE ACTIONS
+      (cont.)
+    bbox:
+    - 56
+    - 100
+    - 400
+    - 445
+    row_count: 4
+    column_count: 2
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 100
+      - 124
+      - 134
+    - row: 0
+      column: 1
+      bbox:
+      - 124
+      - 100
+      - 400
+      - 134
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 134
+      - 124
+      - 211
+    - row: 1
+      column: 1
+      bbox:
+      - 124
+      - 134
+      - 400
+      - 211
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 211
+      - 124
+      - 266
+    - row: 2
+      column: 1
+      bbox:
+      - 124
+      - 211
+      - 400
+      - 266
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 266
+      - 124
+      - 312
+    - row: 3
+      column: 1
+      bbox:
+      - 124
+      - 266
+      - 400
+      - 312

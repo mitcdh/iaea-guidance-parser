@@ -1,0 +1,98 @@
+# Exact source headings, definition openings and note anchors; selection is by PDF hash.
+match:
+  source_sha256: 2571225c1b95990ab9b5774b57422939157f22c1622b51f20366c7db10dcef39
+parser:
+  reading_order_pages:
+  - 1
+  - 5
+  - 43
+  - 44
+  heading_continuations:
+  - pdf_pages:
+    - 23
+    lines:
+    - GENERAL RECOMMENDATIONS
+  subheading_parents:
+    3. ELEMENTS OF A STATE’S NUCLEAR SECURITY REGIME FOR RADIOACTIVE MATERIAL, ASSOCIATED FACILITIES AND ASSOCIATED ACTIVITIES:
+      State:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Regulatory body:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Operator, shipper and/or carrier:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Risk management:
+      - RISK BASED NUCLEAR SECURITY SYSTEMS AND MEASURES
+      Interfaces with the safety system:
+      - RISK BASED NUCLEAR SECURITY SYSTEMS AND MEASURES
+    4. RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL, ASSOCIATED FACILITIES AND ASSOCIATED ACTIVITIES:
+      Threat assessment:
+      - GENERAL RECOMMENDATIONS
+      Graded approach:
+      - GENERAL RECOMMENDATIONS
+      Categorization:
+      - GENERAL RECOMMENDATIONS
+      Regulatory approach:
+      - GENERAL RECOMMENDATIONS
+      Security system:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      Security management:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      Detection:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security system
+      Delay:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security system
+      Response:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security system
+      Sabotage:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security system
+      Access control:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Trustworthiness:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Information protection:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Security plan:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Training and qualification:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Accounting:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Inventory:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+      Nuclear security event reporting:
+      - RECOMMENDATIONS FOR THE SECURITY OF RADIOACTIVE MATERIAL IN USE AND STORAGE
+      - Security management
+  page_regions:
+    2:
+      region: FrontMatter
+      section: THE IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    33:
+      region: Glossary
+      section: DEFINITIONS
+    38: BackMatter
+    39: BackMatter
+    40: BackMatter
+    41: BackMatter
+    42: BackMatter
+    43: BackMatter
+    44: BackMatter
+  footnote_pages:
+  - 11
+  - 13
+  - 35

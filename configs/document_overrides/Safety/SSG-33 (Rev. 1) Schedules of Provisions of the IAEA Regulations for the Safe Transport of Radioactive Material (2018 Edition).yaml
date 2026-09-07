@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "acda5e7f23da9eb65ed50d4ebe157d9781d9dd4e78003b3c8bbf630f84297603"
+
 # Official source:
 # https://nucleus-apps.iaea.org/nss-oui/Content/Index?CollectionId=m_0d815b2a-c704-4f93-9517-b7a15f8343dd__1_0&type=PublishedCollection
 document:

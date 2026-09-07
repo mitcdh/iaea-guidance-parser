@@ -55,6 +55,11 @@ class PageText:
     tables: dict[str, dict[str, Any]] = field(default_factory=dict)
     figure_regions: list[dict[str, Any]] = field(default_factory=list)
     current_source_spans: list[dict[str, Any]] = field(default_factory=list)
+    # Rich PDF spans stay internal: exports retain the existing source-line geometry.
+    source_typography: dict[int, list[dict[str, Any]]] = field(default_factory=dict)
+    glossary_openings: dict[str, str] = field(default_factory=dict)
+    figure_regions_by_caption: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    figure_warnings: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass

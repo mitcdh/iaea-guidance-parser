@@ -1,0 +1,38 @@
+# Source-checked against the physical pages below; filename is descriptive only.
+match:
+  source_sha256: "91c145805a4169a9c45a5a89c0a783816b9612ba9359e22d47d3b03c91c32211"
+
+parser:
+  # These single-column cover/title/advert pages store objects out of visible order.
+  reading_order_pages: [1, 5, 31, 32]
+  # The visible glyphs on page 4 are blank spaces between wrapped country names.
+  font_decoders:
+    - pdf_pages: [4]
+      fonts: [SymbolMT]
+      replacements:
+        "\uF020": " "
+
+  heading_continuations:
+    - pdf_pages: [20]
+      lines:
+        - "ESSENTIAL ELEMENT 12: SUSTAINING A NUCLEAR SECURITY"
+        - "REGIME"
+
+  # Definitions end on page 25; page 26 is blank, and ordering pages start on 27.
+  page_regions:
+    2:
+      region: FrontMatter
+      section: THE IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    21: Glossary
+    27: BackMatter
+    28: BackMatter
+    31: BackMatter
+    32: BackMatter
+
+  # These are the publication's only two notes. Street numbers in sales lists are not notes.
+  footnote_pages: [11, 24]

@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "8ed694cb22d5c40e79f378396a4b0c9080c9fcbb37ccdb2bbc231e40c63cc1a9"
+
 # Source review: physical PDF pages 28, 53 and 54, checked against rendered pages.
 # The same embedded Symbol encoding supplies the listed glyphs on the scoped pages.
 # Other unknown symbols (including diagram markers and equation pieces) are unchanged.
@@ -26,3 +30,11 @@ parser:
       : β
       : α
       : μ
+  # Physical page 55: these notes belong to TABLE 8, which interrupts II.19.
+  # The paragraph resumes with "radionuclides" on page 56. Keep the source
+  # note and anchors a-k with the table instead of inserting them into prose.
+  outline_regions:
+  - pdf_pages: [55]
+    start_pattern: '^Note:\s+The OILs'
+    element_id: TABLE 8
+    title: Notes to TABLE 8

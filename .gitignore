@@ -6,6 +6,11 @@ inputs/
 # Local staging, parser comparisons, and recoverable output backups
 tmp/
 
+# Local workflow ledgers, work queues, and review/validation reports
+/reviews/*
+!/reviews/README.md
+/docs/validation.md
+
 # Python virtual environments
 .venv/
 venv/

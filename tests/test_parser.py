@@ -1,5 +1,21 @@
+import pytest
+
 from iaea_guidance_parser.models import DocumentMetadata, PageText
 from iaea_guidance_parser.parser import IAEAGuidanceParser, classify_status
+
+
+def test_scientific_notation_survives_parsing_and_reading_export():
+    from iaea_guidance_parser.exporters import _record_content_text
+
+    text = "Activity: 1.2 × 10⁻³ Bq; ²³⁵U; H₂O; dose ≤ 10 μSv h⁻¹; x ≥ −0.5 ± 0.1; α/β ≠ γ."
+    page = PageText(pdf_page=1, printed_page="1", text="", lines=["2. MEASUREMENT", f"2.1. {text}"])
+    metadata = DocumentMetadata(
+        document_id="NOTATION", source_file="fixture.pdf", source_sha256="0" * 64
+    )
+    _, records = IAEAGuidanceParser(metadata, [page]).parse()
+    paragraph = next(r for r in records if r.element_type == "paragraph")
+    assert paragraph.text == text
+    assert _record_content_text(paragraph) == text
 
 
 def test_status_classification_uses_spess_c_structure():
@@ -315,3 +331,113 @@ def test_hyphenated_diagram_identifier_is_not_an_embedded_footnote():
     paragraph = next(record for record in records if record.element_id == "2.1")
     assert paragraph.text == "LH1-4 Analytical justified; LH2-4 Analytical justified."
     assert not any(record.element_type == "footnote" for record in records)
+
+
+def test_suspended_compound_keeps_its_hyphen_and_word_boundary():
+    metadata = DocumentMetadata(document_id="D", source_file="d.pdf", source_sha256="source")
+    pages = [
+        PageText(
+            pdf_page=1,
+            printed_page="1",
+            text="",
+            lines=[
+                "2. COMMUNICATION",
+                "2.1. Exchange pre‑ and post‑shipment notifications.",
+                "2.2. Review pre‑",
+                "and post‑shipment documents.",
+                "2.3. Use short‑ or long‑term arrangements.",
+            ],
+        )
+    ]
+    _, records = IAEAGuidanceParser(metadata, pages).parse()
+    paragraphs = {r.element_id: r.text for r in records if r.element_type == "paragraph"}
+    assert "pre‑ and post‑shipment" in paragraphs["2.1"]
+    assert "pre‑ and post‑shipment" in paragraphs["2.2"]
+    assert "short‑ or long‑term" in paragraphs["2.3"]
+
+
+def test_wrapped_url_keeps_literal_hyphen_without_inserting_a_space():
+    from iaea_guidance_parser.rules import remove_pdf_line_breaks
+
+    assert remove_pdf_line_breaks(
+        ["See https://example.org/nuclear-safety-", "and-security-glossary for definitions."]
+    ) == ["See https://example.org/nuclear-safety-and-security-glossary for definitions."]
+    assert remove_pdf_line_breaks(["See https://example.org/source-", "document for details."]) == [
+        "See https://example.org/source-document for details."
+    ]
+
+
+def test_reviewed_compound_keeps_its_hyphen_but_ordinary_wraps_still_join():
+    metadata = DocumentMetadata("DEMO", "demo.pdf", "source-hash")
+    lines = ["1. INTRODUCTION", "1.1. Consider off-", "site consequences and pro-", "tection."]
+    page = PageText(1, "1", "\n".join(lines), lines)
+    _, records = IAEAGuidanceParser(
+        metadata, [page], parser_config={"hyphenated_words": ["off-site"]}
+    ).parse()
+    assert next(r.text for r in records if r.element_id == "1.1") == (
+        "Consider off-site consequences and protection."
+    )
+
+
+@pytest.mark.parametrize("scope", ["Annex", "Appendix"])
+def test_prefixed_references_keep_their_annex_or_appendix_context(scope):
+    metadata = DocumentMetadata(
+        document_id="DEMO", source_file="demo.pdf", source_sha256="abc", title="Demo"
+    )
+    pages = [
+        PageText(
+            pdf_page=1,
+            printed_page="1",
+            text="",
+            lines=[
+                "1. INTRODUCTION",
+                "1.1. Context.",
+                f"{scope} I",
+                "I–1. See references below.",
+                f"REFERENCES TO {scope.upper()} 1",
+                "[I–1] INTERNATIONAL ATOMIC ENERGY AGENCY, First title (2018).",
+                "[I–2] INTERNATIONAL ATOMIC ENERGY AGENCY, Second title (2019).",
+                "[I–3] INTERNATIONAL ATOMIC",
+                "ENERGY AGENCY,",
+                "IAEA",
+                "Safety Glossary: Terminology Used in Nuclear Safety (2019).",
+            ],
+        ),
+        PageText(
+            pdf_page=2,
+            printed_page="2",
+            text="",
+            lines=[
+                "[I–4] INTERNATIONAL ATOMIC ENERGY AGENCY, Fourth title (2019).",
+                f"{scope} II",
+                "II–1. Next section.",
+            ],
+        ),
+    ]
+    _, records = IAEAGuidanceParser(metadata, pages, include_text_blocks=True).parse()
+    refs = [r for r in records if r.element_type == "reference"]
+    assert [r.element_id for r in refs] == ["[I–1]", "[I–2]", "[I–3]", "[I–4]"]
+    assert all(r.section_path == [f"{scope} I", f"REFERENCES TO {scope.upper()} 1"] for r in refs)
+    assert all(r.source_region == "References" and r.text_status == "Informational" for r in refs)
+    assert (
+        refs[2].text
+        == "INTERNATIONAL ATOMIC ENERGY AGENCY, IAEA Safety Glossary: Terminology Used in Nuclear Safety (2019)."
+    )
+    assert refs[-1].page_start_pdf == refs[-1].page_end_pdf == 2
+    assert not any(
+        r.element_type == "heading" and r.text.startswith(("[I", "ENERGY AGENCY", "IAEA"))
+        for r in records
+    )
+    following = next(r for r in records if r.element_id == "II–1")
+    assert following.section_path == [f"{scope} II"] and following.source_region == scope
+
+
+@pytest.mark.parametrize("fragments", [["defence-in-", "depth."], ["defence-", "in-depth."]])
+def test_reviewed_three_part_compound_survives_either_line_break(fragments):
+    metadata = DocumentMetadata("DEMO", "demo.pdf", "source")
+    lines = ["1. INTRODUCTION", "1.1. Preserve " + fragments[0], fragments[1]]
+    page = PageText(1, "1", "\n".join(lines), lines)
+    _, records = IAEAGuidanceParser(
+        metadata, [page], parser_config={"hyphenated_words": ["defence-in-depth"]}
+    ).parse()
+    assert next(r.text for r in records if r.element_id == "1.1") == "Preserve defence-in-depth."

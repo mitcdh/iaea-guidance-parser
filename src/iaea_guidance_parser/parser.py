@@ -5,9 +5,10 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .metadata import infer_metadata, load_config
+from .metadata import config_source_sha256, infer_metadata, load_config
 from .models import DocumentMetadata, PageText, StructuralElement
 from .pdf_extract import extract_pages
+from .provenance import sha256_file
 from .rules import (
     ANNEX_HEADING_RE,
     APPENDIX_HEADING_RE,
@@ -27,6 +28,7 @@ from .rules import (
     StructuralLabel,
     classify_status,
     is_all_caps_heading,
+    is_prefixed_reference,
     match_figure_label,
     match_paragraph_label,
     match_table_label,
@@ -84,6 +86,8 @@ class IAEAGuidanceParser:
         self.current_local_scope: str | None = None
         self._heading_fragments: dict[tuple[int, str], list[str]] = {}
         self._interrupted_paragraph: StructuralElement | None = None
+        self._claimed_source_lines: set[tuple[int, int]] = set()
+        self._automatic_headings: set[tuple[int, str]] = set()
 
     @classmethod
     def from_pdf(cls, pdf_path: Path, config_path: Path | None = None) -> IAEAGuidanceParser:
@@ -95,7 +99,13 @@ class IAEAGuidanceParser:
         cls, pdf_path: Path, config: dict[str, Any] | None = None
     ) -> IAEAGuidanceParser:
         """Create a parser for one PDF using an already-loaded config dictionary."""
-        parser_cfg = config.get("parser", {}) if config else {}
+        config = config or {}
+        expected_hash = config_source_sha256(config)
+        if expected_hash is not None and expected_hash != sha256_file(pdf_path):
+            raise ValueError(f"{pdf_path}: config source_sha256 does not match this PDF")
+        # Selection is not a parser rule and must not change the config fingerprint.
+        config = {key: value for key, value in config.items() if key != "match"}
+        parser_cfg = config.get("parser", {})
         pages = extract_pages(pdf_path, parser_cfg)
         metadata = infer_metadata(pdf_path, pages, config)
         return cls(
@@ -116,15 +126,31 @@ class IAEAGuidanceParser:
         buffers = _ElementBuffers()
         for page in self.pages:
             self._current_page = page
-            self._flush_footnote(buffers.footnote)
+            boundary = self.parser_config.get("page_regions", {}).get(page.pdf_page)
+            if boundary:
+                region = boundary if isinstance(boundary, str) else boundary["region"]
+                self._flush(buffers.prose)
+                self._flush_table(buffers.table)
+                self._flush_footnote(buffers.footnote, buffers.prose)
+                self.region = region
+                self.current_major_heading = None if region == "FrontMatter" else region
+                if isinstance(boundary, dict):
+                    self.current_major_heading = boundary.get("section", self.current_major_heading)
+                self.current_subheading = None
+                self.current_para_id = None
+                self.current_local_scope = None
+                self._interrupted_paragraph = None
+            self._flush_footnote(buffers.footnote, buffers.prose)
             for line in self._prepared_page_lines(page):
                 page.current_source_spans = self._source_spans(line, page)
                 self._consume_line(line, page, buffers)
-            self._flush_footnote(buffers.footnote)
+            self._flush_footnote(buffers.footnote, buffers.prose)
 
         self._flush(buffers.prose)
         self._flush_table(buffers.table)
-        self._flush_footnote(buffers.footnote)
+        self._flush_footnote(buffers.footnote, buffers.prose)
+        self._infer_pdf_hierarchy()
+        self._resolve_pdf_footnotes()
         return self.meta, self.records
 
     def _consume_line(self, line: str, page: PageText, buffers: _ElementBuffers) -> None:
@@ -145,16 +171,172 @@ class IAEAGuidanceParser:
             return
         self._consume_prose(line, page, buffers)
 
-    @staticmethod
-    def _source_spans(line: str, page: PageText) -> list[dict[str, Any]]:
-        """Keep exact normalized-line matches; do not invent geometry for a guess."""
+    def _source_spans(self, line: str, page: PageText) -> list[dict[str, Any]]:
+        """Consume matching occurrences once, retaining distinct repeated source lines."""
         compact = re.sub(r"\s+", "", line)
         spans = []
         for source in page.source_lines:
             text = re.sub(r"\s+", "", source["text"])
-            if source["role"] == "text" and len(text) >= 4 and text in compact:
+            if text.endswith("-") and text not in compact and text[:-1] in compact:
+                text = text[:-1]  # The existing line-joiner already removed this line-end hyphen.
+            key = (page.pdf_page, source["line"])
+            if (
+                source["role"] in {"text", "reviewed_image_transcription"}
+                and (len(text) >= 4 or text == compact)
+                and text
+                and text in compact
+                and key not in self._claimed_source_lines
+            ):
                 spans.append({key: source[key] for key in ("pdf_page", "line", "bbox")})
+                compact = compact.replace(text, "", 1)
+                self._claimed_source_lines.add(key)
         return spans
+
+    @staticmethod
+    def _pdf_note_label(spans):
+        visible = [s for s in spans if s["text"].strip()]
+        if len(visible) < 2:
+            return None
+        first, following = visible[:2]
+        label = first["text"].strip()
+        if re.fullmatch(r"\d{1,2}", label) and first["size"] < following["size"] * 0.8:
+            return label
+        return None
+
+    def _pdf_note_body(self, line, page):
+        return any(
+            normalize_text(source["text"]) == line
+            and self._pdf_note_label(page.source_typography.get(source["line"], []))
+            for source in page.source_lines
+        )
+
+    def _resolve_pdf_footnotes(self):
+        """Resolve inline markers against final record ownership, never the latest paragraph."""
+        owners = {}
+        for record in self.records:
+            if record.element_type not in {"paragraph", "text_block"}:
+                continue
+            for span in record.extra.get("source_spans", []):
+                owners.setdefault((span["pdf_page"], span["line"]), []).append(record)
+        for note in self.records:
+            page = self._pages_by_number[note.page_start_pdf]
+            if note.element_type != "footnote" or not page.source_typography:
+                continue
+            if "source_anchor" in note.extra:
+                continue
+            bodies = [
+                source
+                for source in page.source_lines
+                if self._pdf_note_label(page.source_typography.get(source["line"], []))
+                == note.element_id
+            ]
+            candidates = []
+            for source in page.source_lines:
+                spans = page.source_typography.get(source["line"], [])
+                if self._pdf_note_label(spans) or source["role"] != "text":
+                    continue
+                for index, span in enumerate(spans):
+                    if span["text"].strip() != note.element_id or not index:
+                        continue
+                    before = "".join(s["text"] for s in spans[:index]).rstrip()
+                    previous = spans[index - 1]
+                    after = "".join(s["text"] for s in spans[index + 1 :])
+                    raised = bool(span["flags"] & 1) or (
+                        previous["origin"][1] - span["origin"][1] > previous["size"] * 0.2
+                    )
+                    # A word/sentence citation is distinguishable from 10^-3, m^2,
+                    # H^2O and a superscript attached to an isotope symbol.
+                    if not (
+                        raised
+                        and span["size"] < previous["size"] * 0.8
+                        and re.search(r"[^\W\d_]{2,}[.!?\u2019\u201d)]?$", before)
+                        and (not after or not after[:1].isalnum())
+                        and len(bodies) == 1
+                        and source["bbox"][3] < bodies[0]["bbox"][1]
+                    ):
+                        continue
+                    linked = owners.get((page.pdf_page, source["line"]), [])
+                    if len(linked) == 1:
+                        candidates.append((linked[0], source))
+            if len(candidates) == 1:
+                owner, source = candidates[0]
+                note.linked_from_element_id = owner.element_id
+                note.section_path = list(owner.section_path)
+                note.source_region = owner.source_region
+                note.extra["inline_anchor"] = {
+                    "pdf_page": page.pdf_page,
+                    "line": source["line"],
+                    "bbox": source["bbox"],
+                }
+            else:
+                note.linked_from_element_id = None
+                note.confidence = "low"
+                note.parser_notes.append(
+                    "Unresolved PDF footnote anchor: no unique inline marker owner."
+                )
+
+    def _infer_pdf_hierarchy(self):
+        """Use a demonstrated size/style distinction within each major section."""
+
+        def profile(record):
+            spans = [
+                s
+                for ref in record.extra.get("source_spans", [])
+                for s in self._pages_by_number[ref["pdf_page"]].source_typography.get(
+                    ref["line"], []
+                )
+                if any(c.isalpha() for c in s["text"])
+            ]
+            if not spans:
+                return None
+            return (
+                max(s["size"] for s in spans),
+                all(s["flags"] & 2 for s in spans),
+                min(s["bbox"][0] for s in spans),
+            )
+
+        def contains(parent, child):
+            title, (size, italic, left) = parent
+            child_title, (child_size, child_italic, child_left) = child
+            return (
+                title.isupper()
+                and child_left >= left - 2
+                and (
+                    size >= child_size + 1
+                    or (
+                        not child_title.isupper()
+                        and child_italic
+                        and not italic
+                        and abs(size - child_size) <= 0.5
+                    )
+                )
+            )
+
+        root, stack, parents = None, [], {}
+        for record in self.records:
+            path = record.section_path
+            if record.source_region not in {"Body", "Appendix", "Annex"} or not path:
+                continue
+            if path[0] != root:
+                root, stack, parents = path[0], [], {}
+            if record.element_type == "heading":
+                style = profile(record)
+                parents.pop(record.text, None)
+                if record.text == root:
+                    stack = []
+                    continue
+                if style:
+                    entry = (record.text, style)
+                    while stack and not contains(stack[-1], entry):
+                        stack.pop()
+                    if stack:
+                        parents[record.text] = [title for title, _ in stack]
+                    stack.append(entry)
+            # Explicit parent paths always take precedence; inferred parents
+            # never rewrite a reviewed hierarchy or cross a major boundary.
+            explicit = self.parser_config.get("subheading_parents", {}).get(path[0], {})
+            if len(path) == 2 and path[-1] in parents and path[-1] not in explicit:
+                record.section_path = [path[0], *parents[path[-1]], path[-1]]
 
     @staticmethod
     def _visual_regions(line: str, page: PageText) -> list[dict[str, Any]]:
@@ -162,6 +344,8 @@ class IAEAGuidanceParser:
         label = match_figure_label(line)
         if label is None:
             return []
+        if page.source_typography:
+            return page.figure_regions_by_caption.get(label.canonical_id, [])
         captions = [source for source in page.source_lines if match_figure_label(source["text"])]
         matching = [
             source
@@ -182,7 +366,7 @@ class IAEAGuidanceParser:
             return False
         self._flush_before_floating_element(buffers.prose)
         self._flush_table(buffers.table)
-        self._flush_footnote(buffers.footnote)
+        self._flush_footnote(buffers.footnote, buffers.prose)
         self._add_record(
             element_type="table",
             element_id=table["element_id"],
@@ -197,14 +381,25 @@ class IAEAGuidanceParser:
             parent_element_id=self.current_local_scope,
             parser_notes=[
                 "Captioned table bounded by source rules; cell relationships are supplied only for grids."
-            ],
+            ]
+            + table.get("warnings", []),
             extra={
                 "source_label": table["source_label"],
                 "label_style": table["label_style"],
                 "source_spans": table["source_spans"],
                 "table": {
-                    key: table[key]
-                    for key in ("pdf_page", "bbox", "layout", "row_count", "column_count", "cells")
+                    **{
+                        key: table[key]
+                        for key in (
+                            "pdf_page",
+                            "bbox",
+                            "layout",
+                            "row_count",
+                            "column_count",
+                            "cells",
+                        )
+                    },
+                    **({"notes": table["notes"]} if table.get("notes") else {}),
                 },
             },
         )
@@ -254,7 +449,7 @@ class IAEAGuidanceParser:
         if region_transition:
             self._flush(active)
             self._flush_table(active_table)
-            self._flush_footnote(active_footnote)
+            self._flush_footnote(active_footnote, buffers.prose)
             self._interrupted_paragraph = None
             self._apply_region_transition(region_transition, line, page)
             return True
@@ -263,7 +458,7 @@ class IAEAGuidanceParser:
         if local_scope:
             self._flush(active)
             self._flush_table(active_table)
-            self._flush_footnote(active_footnote)
+            self._flush_footnote(active_footnote, buffers.prose)
             self._interrupted_paragraph = None
             self.current_local_scope = local_scope
             self.current_subheading = re.sub(r"\s+", " ", line).strip()
@@ -279,7 +474,7 @@ class IAEAGuidanceParser:
         if active_outline_table:
             self._flush(active)
             self._flush_table(active_table)
-            self._flush_footnote(active_footnote)
+            self._flush_footnote(active_footnote, buffers.prose)
             table_id, title = active_outline_table
             active_table.start(
                 kind="table",
@@ -295,7 +490,7 @@ class IAEAGuidanceParser:
         table_match = self._table_match(line, page)
         if table_match:
             self._flush_before_floating_element(active)
-            self._flush_footnote(active_footnote)
+            self._flush_footnote(active_footnote, buffers.prose)
             table_id = f"TABLE {table_match.canonical_id}"
             title = re.sub(r"\s+", " ", table_match.text).strip()
             label_extra = {
@@ -326,7 +521,7 @@ class IAEAGuidanceParser:
         if synthetic_table:
             self._flush_before_floating_element(active)
             self._flush_table(active_table)
-            self._flush_footnote(active_footnote)
+            self._flush_footnote(active_footnote, buffers.prose)
             table_id, title = synthetic_table
             active_table.start(
                 kind="table",
@@ -383,7 +578,7 @@ class IAEAGuidanceParser:
         footnote_match = self._footnote_match(line)
         if active_footnote.kind == "footnote":
             if footnote_match or self._line_starts_new_non_table_element(line, page):
-                self._flush_footnote(active_footnote)
+                self._flush_footnote(active_footnote, buffers.prose)
             else:
                 active_footnote.append(line, page)
                 return True
@@ -436,7 +631,8 @@ class IAEAGuidanceParser:
                 confidence="medium",
                 parser_notes=[
                     "Caption extracted from PDF text. Use page image review for visual content."
-                ],
+                ]
+                + page.figure_warnings.get(figure_match.canonical_id, []),
                 parent_element_id=self.current_local_scope,
                 extra=figure_extra,
             )
@@ -448,14 +644,39 @@ class IAEAGuidanceParser:
         active_footnote = buffers.footnote
         footnote_match = self._footnote_match(line)
         if footnote_match:
+            footnote_id = footnote_match.group("num")
+            anchor = next(
+                (
+                    item
+                    for item in self.parser_config.get("footnote_anchors", [])
+                    if page.pdf_page in item["pdf_pages"] and item["footnote_id"] == footnote_id
+                ),
+                {},
+            )
             # Do not flush the active paragraph; footnotes can interrupt a paragraph across pages.
             active_footnote.start(
                 kind="footnote",
-                element_id=footnote_match.group("num"),
+                element_id=footnote_id,
                 line=footnote_match.group("text").strip(),
                 page=page,
+                section_path=anchor.get("section_path", self._section_path()),
+                linked_from_element_id=anchor.get(
+                    "element_id", active.element_id or self.current_para_id
+                ),
+                extra={"source_anchor": anchor} if anchor else {},
+            )
+            return True
+
+        term = self._glossary_term(line)
+        if term:
+            self._flush(active)
+            active.start(
+                kind="text_block",
+                element_id=term,
+                line=line,
+                page=page,
                 section_path=self._section_path(),
-                linked_from_element_id=active.element_id or self.current_para_id,
+                title=term,
             )
             return True
 
@@ -587,6 +808,35 @@ class IAEAGuidanceParser:
             next_line = lines[i + 1] if i + 1 < len(lines) else ""
             prev_line = lines[i - 1] if i > 0 else ""
 
+            fragments = next(
+                (
+                    rule["lines"]
+                    for rule in self.parser_config.get("heading_continuations", [])
+                    if page.pdf_page in rule["pdf_pages"]
+                    and lines[i : i + len(rule["lines"])] == rule["lines"]
+                ),
+                None,
+            )
+            if fragments:
+                merged = " ".join(fragments)
+                self._heading_fragments[(page.pdf_page, merged)] = fragments
+                filtered.append(merged)
+                i += len(fragments)
+                continue
+
+            fragments = (
+                self._typographic_heading_fragments(page, lines, i)
+                if self.region in {"Body", "Appendix", "Annex"} or MAJOR_BODY_HEADING_RE.match(line)
+                else []
+            )
+            if fragments:
+                merged = " ".join(fragments)
+                self._heading_fragments[(page.pdf_page, merged)] = fragments
+                self._automatic_headings.add((page.pdf_page, merged))
+                filtered.append(merged)
+                i += len(fragments)
+                continue
+
             if self._is_page_furniture_line(line, prev_line, next_line):
                 if PAGE_NUMBER_RE.match(line) and PAGE_FURNITURE_PAIR_RE.match(next_line):
                     i += 2
@@ -617,21 +867,70 @@ class IAEAGuidanceParser:
             i += 1
         return remove_pdf_line_breaks(
             filtered,
+            hyphenated_words=tuple(self.parser_config.get("hyphenated_words", [])),
             structural_start=lambda candidate: self._line_is_structural_candidate(candidate, page),
             preserve_after=lambda candidate: (
                 candidate in page.tables
+                or self._is_heading_line(candidate)
                 or bool(self._configured_outline_table_start(candidate, page))
             ),
         )
 
+    @staticmethod
+    def _typographic_heading_fragments(page, lines, start):
+        """Join an isolated, aligned run of capitalized bold heading lines."""
+        if not (is_all_caps_heading(lines[start]) or MAJOR_BODY_HEADING_RE.match(lines[start])):
+            return []
+        evidence = []
+        for text in lines[start : start + 6]:
+            matches = [s for s in page.source_lines if normalize_text(s["text"]) == text]
+            if len(matches) != 1:
+                break
+            source = matches[0]
+            spans = [s for s in page.source_typography.get(source["line"], []) if s["text"].strip()]
+            if not spans or not all(s["flags"] & 16 for s in spans):
+                break
+            if evidence and (not text.isupper() or MAJOR_BODY_HEADING_RE.match(text)):
+                break
+            size = max(s["size"] for s in spans)
+            if evidence:
+                previous, prior_size = evidence[-1]
+                gap = source["bbox"][1] - previous["bbox"][3]
+                aligned = (
+                    abs(source["bbox"][0] - previous["bbox"][0]) <= 2
+                    or abs(sum(source["bbox"][::2]) - sum(previous["bbox"][::2])) <= 4
+                )
+                if abs(size - prior_size) > 0.5 or not aligned or not -2 <= gap <= size * 0.45:
+                    break
+            evidence.append((source, size))
+        if len(evidence) < 2:
+            return []
+        first, last = evidence[0][0], evidence[-1][0]
+        outside = [s for s in page.source_lines if s not in [item[0] for item in evidence]]
+        before = [s["bbox"][3] for s in outside if s["bbox"][3] <= first["bbox"][1]]
+        after = [s["bbox"][1] for s in outside if s["bbox"][1] >= last["bbox"][3]]
+        if (before and first["bbox"][1] - max(before) < 4) or (
+            after and min(after) - last["bbox"][3] < 4
+        ):
+            return []
+        return lines[start : start + len(evidence)]
+
     def _line_is_structural_candidate(self, line: str, page: PageText) -> bool:
         return bool(
             line in page.tables
+            or (
+                (self.region == "Glossary" or any(GLOSSARY_HEADING_RE.match(s) for s in page.lines))
+                and any(line.startswith(opening) for opening in page.glossary_openings.values())
+            )
+            or (self._lettered_list_page(page) and re.match(r"^\([a-z]\)(?:\s|$)", line))
             or self._paragraph_match(line, page)
+            or self._glossary_term(line)
+            or is_prefixed_reference(line)
             or self._table_match(line, page)
             or self._figure_match(line, page)
             or MAJOR_BODY_HEADING_RE.match(line)
             or FOOTNOTE_RE.match(line)
+            or self._footnote_match(line)
             or REQUIREMENT_RE.match(line)
             or REFERENCE_ITEM_RE.match(line)
             or APPENDIX_HEADING_RE.match(line)
@@ -646,11 +945,26 @@ class IAEAGuidanceParser:
             or self._looks_like_outline_table_line(line)
             or re.match(r"^[A-Z]\.\s*$", line)
             or line in KNOWN_PUBLICATION_HEADINGS
+            or self._is_heading_line(line)
             or is_all_caps_heading(line)
             or self._is_short_subheading_line(line, page)
         )
 
     def _is_page_furniture_line(self, line: str, prev_line: str, next_line: str) -> bool:
+        if self._current_page and self._pdf_note_body(line, self._current_page):
+            return False
+        note = FOOTNOTE_RE.match(line)
+        if (
+            note
+            and self._current_page
+            and any(
+                self._current_page.pdf_page in item["pdf_pages"]
+                and item["footnote_id"] == note.group("num")
+                for item in self.parser_config.get("footnote_anchors", [])
+            )
+        ):
+            # A reviewed note beginning with the publisher name is not a footer.
+            return False
         if PAGE_FURNITURE_COMBINED_RE.match(line):
             return True
         if PAGE_NUMBER_RE.match(line) and PAGE_FURNITURE_PAIR_RE.match(next_line):
@@ -663,7 +977,9 @@ class IAEAGuidanceParser:
         if not next_line or len(line) > 140 or len(next_line) > 120:
             return False
         if (
-            match_paragraph_label(next_line)
+            is_prefixed_reference(line)
+            or is_prefixed_reference(next_line)
+            or match_paragraph_label(next_line)
             or match_table_label(next_line)
             or match_figure_label(next_line)
             or REQUIREMENT_RE.match(next_line)
@@ -693,9 +1009,34 @@ class IAEAGuidanceParser:
 
     def _is_heading_line(self, line: str) -> bool:
         """Recognise known front-matter headings without treating country lists as headings."""
-        if line in KNOWN_PUBLICATION_HEADINGS:
+        if self._current_page and (self._current_page.pdf_page, line) in self._automatic_headings:
+            return True
+        if self._current_page and any(
+            self._current_page.pdf_page in rule["pdf_pages"] and line == " ".join(rule["lines"])
+            for rule in self.parser_config.get("heading_continuations", [])
+        ):
+            return True
+        if line in KNOWN_PUBLICATION_HEADINGS or (
+            self.region == "Glossary" and line == "DEFINITIONS"
+        ):
             return True
         return False
+
+    def _glossary_term(self, line: str) -> str | None:
+        """Keep source-verified definition labels with their own prose and notes."""
+        if self.region == "Glossary":
+            return next(
+                (
+                    term
+                    for term, opening in {
+                        **(self._current_page.glossary_openings if self._current_page else {}),
+                        **self.parser_config.get("glossary_terms", {}),
+                    }.items()
+                    if line.startswith(opening)
+                ),
+                None,
+            )
+        return None
 
     def _skip_line(self, line: str) -> bool:
         # Decorative artifacts and ordering/footer list noise can be ignored by default.
@@ -723,6 +1064,7 @@ class IAEAGuidanceParser:
         return None
 
     def _apply_region_transition(self, new_region: str, line: str, page: PageText) -> None:
+        reference_heading = REFERENCES_HEADING_RE.match(line)
         self.region = new_region
         self.current_local_scope = None
         if new_region == "Annex":
@@ -736,9 +1078,25 @@ class IAEAGuidanceParser:
                 f"Appendix {m.group('num')}" if m and m.group("num") else "Appendix"
             )
             self.current_subheading = None
+        elif (
+            new_region == "References"
+            and reference_heading
+            and reference_heading.group("scope")
+            and self.current_major_heading
+            and self.current_major_heading.startswith(reference_heading.group("scope").title())
+        ):
+            # Annex/appendix bibliographies remain under their source section.
+            self.current_subheading = line
         elif new_region in {"References", "Glossary", "BackMatter"}:
             self.current_major_heading = new_region
             self.current_subheading = None
+        boundary = self.parser_config.get("page_regions", {}).get(page.pdf_page)
+        if (
+            isinstance(boundary, dict)
+            and boundary.get("region") == new_region
+            and boundary.get("section") == line
+        ):
+            self.current_major_heading = line
         self._add_heading(line, page)
 
     def _line_starts_new_non_table_element(self, line: str, page: PageText | None = None) -> bool:
@@ -748,6 +1106,7 @@ class IAEAGuidanceParser:
             or self._paragraph_match(line, page)
             or MAJOR_BODY_HEADING_RE.match(line)
             or self._detect_region_transition(line)
+            or self._is_heading_line(line)
         )
 
     def _should_treat_as_body_heading(self, line: str, match, page: PageText) -> bool:
@@ -870,7 +1229,22 @@ class IAEAGuidanceParser:
         return paragraph_id.startswith("1.") or bool(re.match(r"^1\d{2}(?:\.|$)", paragraph_id))
 
     def _footnote_match(self, line: str):
+        if not self._footnotes_allowed_on_page():
+            return None
         m = FOOTNOTE_RE.match(line)
+        if not m and self._current_page:
+            # Reviewed notes can begin with a URL or lowercase text. Keep the
+            # general heuristic conservative for unreviewed numbered lines.
+            candidate = re.match(r"^(?P<num>\d{1,2})\s+(?P<text>\S[^\n]+)$", line)
+            if candidate and (
+                self._pdf_note_body(line, self._current_page)
+                or any(
+                    self._current_page.pdf_page in anchor["pdf_pages"]
+                    and anchor["footnote_id"] == candidate.group("num")
+                    for anchor in self.parser_config.get("footnote_anchors", [])
+                )
+            ):
+                m = candidate
         if not m:
             return None
         # Avoid treating numbered list items and table rows as footnotes.
@@ -878,6 +1252,10 @@ class IAEAGuidanceParser:
             return None
         # Footnotes are most often in body/appendix/annex pages. Keep as low-confidence if detected.
         return m
+
+    def _footnotes_allowed_on_page(self) -> bool:
+        pages = self.parser_config.get("footnote_pages")
+        return pages is None or bool(self._current_page and self._current_page.pdf_page in pages)
 
     def _is_short_subheading_line(self, line: str, page: PageText | None = None) -> bool:
         if not line or line.endswith(";"):
@@ -1015,6 +1393,14 @@ class IAEAGuidanceParser:
         if self.current_major_heading:
             out.append(self.current_major_heading)
         if self.current_subheading and self.current_subheading not in out:
+            parents = (
+                self.parser_config.get("subheading_parents", {})
+                .get(self.current_major_heading, {})
+                .get(self.current_subheading, [])
+            )
+            if isinstance(parents, dict):
+                parents = parents.get(self._current_page.pdf_page, [])
+            out.extend(parent for parent in parents if parent not in out)
             out.append(self.current_subheading)
         return out
 
@@ -1053,6 +1439,10 @@ class IAEAGuidanceParser:
                     )
                     active.resume_record.page_end_pdf = active.page_end_pdf
                     active.resume_record.page_end_printed = active.page_end_printed
+                    existing = active.resume_record.extra.setdefault("source_spans", [])
+                    existing.extend(
+                        s for s in active.extra.get("source_spans", []) if s not in existing
+                    )
                     note = "Paragraph resumed after an intervening table or figure."
                     if note not in active.resume_record.parser_notes:
                         active.resume_record.parser_notes.append(note)
@@ -1073,18 +1463,22 @@ class IAEAGuidanceParser:
                             "Footnote body split from a paragraph continuation after a floating table or figure."
                         ],
                     )
-            active.reset()
-            return
-        if text:
+        elif text:
             self._add_text_records_from_active(active, text)
+        for footnote in active.following_footnotes:
+            self._add_record(**footnote)
         active.reset()
 
     def _flush_before_floating_element(self, active: _ActiveElement) -> None:
-        """Flush prose and remember an incomplete paragraph across a table/figure."""
+        """Remember incomplete prose, or an explicitly enabled lettered list."""
         if not active.kind:
             return
-        should_resume = active.kind == "paragraph" and self._text_is_incomplete(
-            " ".join(active.lines)
+        text = " ".join(active.lines)
+        should_resume = active.kind == "paragraph" and (
+            self._text_is_incomplete(text)
+            or (
+                self._lettered_list_page(self._current_page) and re.search(r"(?:^|\s)\(a\)\s", text)
+            )
         )
         element_id = active.element_id
         first_new_record = len(self.records)
@@ -1105,11 +1499,31 @@ class IAEAGuidanceParser:
             return False
         if self._is_short_subheading_line(line, self._current_page):
             return False
+        if self._lettered_list_page(self._current_page) and not self._text_is_incomplete(
+            record.text
+        ):
+            return self._lettered_list_continues(record.text, line)
         return self._text_is_incomplete(record.text) or bool(
             re.match(
                 r"^(?:and|or|but|for|nor|so|yet|which|that|who|whom|whose|where|when|because|while|as|to)\b",
                 line,
             )
+        )
+
+    def _lettered_list_page(self, page: PageText) -> bool:
+        return page.pdf_page in self.parser_config.get("lettered_list_continuation_pages", [])
+
+    def _lettered_list_continues(self, text: str, line: str) -> bool:
+        """A reviewed list can resume only at its next consecutive letter."""
+        if not self._lettered_list_page(self._current_page):
+            return False
+        labels = re.findall(r"(?:^|\s)\(([a-z])\)\s", text)
+        following = re.match(r"^\(([a-z])\)(?:\s|$)", line)
+        return bool(
+            labels
+            and following
+            and labels == list("abcdefghijklmnopqrstuvwxyz"[: len(labels)])
+            and ord(following[1]) == ord(labels[-1]) + 1
         )
 
     def _should_resume_interrupted_paragraph_after_table(
@@ -1120,7 +1534,12 @@ class IAEAGuidanceParser:
     ) -> bool:
         """Recognize prose continued on the page after an inserted table."""
         record = self._interrupted_paragraph
-        if not record or page.pdf_page <= active_table.page_start_pdf:
+        if not record:
+            return False
+        # A table and its notes can interrupt a list on the same physical page.
+        if self._lettered_list_continues(record.text, line):
+            return True
+        if page.pdf_page <= active_table.page_start_pdf:
             return False
         if not self._text_is_incomplete(record.text) or not re.match(r"^[a-z]", line):
             return False
@@ -1159,16 +1578,18 @@ class IAEAGuidanceParser:
             )
         active.reset()
 
-    def _flush_footnote(self, active: _ActiveElement) -> None:
+    def _flush_footnote(self, active: _ActiveElement, prose: _ActiveElement) -> None:
         if active.kind != "footnote":
             active.reset()
             return
         text = self._clean_element_text(" ".join(active.lines))
         if text:
-            self._add_record(
+            footnote = dict(
                 element_type="footnote",
                 element_id=active.element_id,
-                source_region=self.region,
+                source_region=active.extra.get("source_anchor", {}).get(
+                    "source_region", self.region
+                ),
                 section_path=active.section_path,
                 page_start_pdf=active.page_start_pdf,
                 page_end_pdf=active.page_end_pdf,
@@ -1182,12 +1603,18 @@ class IAEAGuidanceParser:
                 ],
                 extra=active.extra,
             )
+            # Emit a footer note after the prose that precedes it, even when
+            # that prose remains open for a continuation on the next page.
+            if prose.kind:
+                prose.following_footnotes.append(footnote)
+            else:
+                self._add_record(**footnote)
         active.reset()
 
     def _clean_element_text(self, text: str) -> str:
         text = re.sub(r"\s+", " ", text).strip()
         # Common PDF line-break hyphenation cleanup for ordinary words. Preserve identifiers using en dash.
-        text = re.sub(r"([a-z])‑\s+([a-z])", r"\1\2", text)
+        text = re.sub(r"([a-z])‑\s+((?!and\b|or\b)[a-z])", r"\1\2", text)
         return text
 
     def _add_text_records_from_active(self, active: _ActiveElement, text: str) -> None:
@@ -1250,6 +1677,8 @@ class IAEAGuidanceParser:
         return [segment for segment in segments if segment[2]]
 
     def _extract_embedded_footnotes(self, text: str) -> tuple[str, list[tuple[str, str]]]:
+        if not self._footnotes_allowed_on_page():
+            return text, []
         matches = list(EMBEDDED_FOOTNOTE_RE.finditer(text))
         if not matches:
             return text, []
@@ -1315,9 +1744,22 @@ class IAEAGuidanceParser:
             for span in extra.get("source_spans", []):
                 page = self._pages_by_number[span["pdf_page"]]
                 source = page.source_lines[span["line"]]
-                if re.sub(r"\s+", "", source["text"]) in source_text:
+                fragment = re.sub(r"\s+", "", source["text"])
+                if fragment in source_text or (
+                    fragment.endswith("-") and fragment[:-1] in source_text
+                ):
                     matching.append(span)
             extra["source_spans"] = matching
+        transcribed_pages = {}
+        for span in extra.get("source_spans", []):
+            source = self._pages_by_number[span["pdf_page"]].source_lines[span["line"]]
+            if source.get("role") == "reviewed_image_transcription":
+                transcribed_pages[span["pdf_page"]] = source["transcription"]
+        if transcribed_pages:
+            extra["reviewed_image_transcriptions"] = [
+                {"pdf_page": n, "geometry": "whole_page", **review}
+                for n, review in transcribed_pages.items()
+            ]
         text_status, reason = classify_status(
             element_type=element_type,
             source_region=source_region,
@@ -1387,6 +1829,7 @@ class _ActiveElement:
         self.parent_element_id: str | None = None
         self.extra: dict[str, Any] = {}
         self.resume_record: StructuralElement | None = None
+        self.following_footnotes: list[dict[str, Any]] = []
 
     def start(
         self,

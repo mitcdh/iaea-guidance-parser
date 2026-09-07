@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "fd909fe72ba87d3e82ed7625b059a7ba307e8fa32a81c5e31f2bc9cad4d9431d"
+
 # Official source:
 # https://www.iaea.org/publications/13405/enhancing-nuclear-security-culture-in-organizations-associated-with-nuclear-and-other-radioactive-material
 document:

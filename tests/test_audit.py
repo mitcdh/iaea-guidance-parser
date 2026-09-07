@@ -74,6 +74,10 @@ def test_visual_review_is_invalidated_by_source_or_output_change(tiny_series):
         pdf_page=int(row["pdf_page"]),
         visual_review="reviewed",
         notes="Checked synthetic source page.",
+        schema_version=2,
+        method="visual",
+        verification_status="verified",
+        evidence=[{"kind": "synthetic_source_image_comparison"}],
     )
     reviews = out / "reviews.jsonl"
     reviews.write_text(json.dumps(row) + "\n")
@@ -92,3 +96,84 @@ def test_export_audit_rejects_a_table_marker_absorbed_into_a_heading(tiny_series
     entries = json.loads((parsed / "series_manifest.json").read_text())["documents"]
     findings = _check_exports(parsed, records, entries)
     assert any(finding["check"] == "unconsumed_layout_marker" for finding in findings)
+
+
+@pytest.mark.parametrize("note_state", ["none", "parsed", "absorbed"])
+def test_automated_structural_verification_is_not_counted_as_visual(tiny_series, note_state):
+    with_footnote = note_state != "none"
+    source, parsed, out = tiny_series
+    pdf = next(source.glob("*.pdf"))
+    with fitz.open() as doc:
+        doc.new_page()
+        page = doc.new_page()
+        page.insert_text((72, 72), "1. INTRODUCTION")
+        page.insert_text((72, 110), "1.1. Every source word should remain traceable.")
+        if with_footnote:
+            page.insert_text((72, 700), "1 This note needs a verified source anchor.", fontsize=8)
+        doc.new_page()
+        doc.set_toc([[1, "1. INTRODUCTION", 2]])
+        data = doc.tobytes()
+    pdf.write_bytes(data)
+    result = parse_one_document(
+        pdf_path=pdf,
+        pdf_root=source,
+        out_root=parsed,
+        series_config={"document_defaults": {"document_id": "DEMO", "title": "Synthetic document"}},
+    )
+    assert any(r.element_type == "footnote" for r in result.records) == with_footnote
+    if note_state == "absorbed":
+        note = next(r for r in result.records if r.element_type == "footnote")
+        paragraph = next(r for r in result.records if r.element_type == "paragraph")
+        paragraph.text += f" {note.element_id} {note.text}"
+        result.records.remove(note)
+    write_outputs(result.output_dir, result.metadata, result.records)
+    write_series_outputs(parsed, series_config={}, results=[result], failures=[])
+    summary = run_audit(source, parsed, out)
+    assert summary["verification_by_method"].get("automated_structural", 0) == (
+        0 if with_footnote else 1
+    )
+    if with_footnote:
+        import csv
+
+        rows = list(csv.DictReader((out / "audit_coverage.csv").open()))
+        assert "source_footnote_candidate" in rows[1]["visual_reasons"]
+        assert rows[1]["missing_token_count"] == "0"
+        assert rows[1]["verification_status"] == "pending"
+    assert summary["visual_pages_reviewed"] == 0
+    assert summary["metadata_documents_verified"] == 0
+    assert summary["boundary_documents_verified"] == 0
+
+
+@pytest.mark.parametrize("region", ["Glossary", "Body"])
+def test_outline_match_does_not_verify_definition_segmentation(tiny_series, region):
+    source, parsed, out = tiny_series
+    pdf = next(source.glob("*.pdf"))
+    with fitz.open() as doc:
+        doc.new_page()
+        page = doc.new_page()
+        page.insert_text((72, 72), "DEFINITIONS")
+        page.insert_text((72, 110), "alpha. First definition.")
+        page.insert_text((72, 140), "beta. Second definition.")
+        doc.new_page()
+        doc.set_toc([[1, "DEFINITIONS", 2]])
+        pdf.write_bytes(doc.tobytes())
+    result = parse_one_document(
+        pdf_path=pdf,
+        pdf_root=source,
+        out_root=parsed,
+        series_config={
+            "document_defaults": {"document_id": "DEMO", "title": "Synthetic document"},
+            "parser": {"page_regions": {2: {"region": region, "section": "DEFINITIONS"}}},
+        },
+    )
+    # All words and the outline heading match, but the terms remain one text block.
+    write_outputs(result.output_dir, result.metadata, result.records)
+    write_series_outputs(parsed, series_config={}, results=[result], failures=[])
+    summary = run_audit(source, parsed, out)
+    import csv
+
+    row = list(csv.DictReader((out / "audit_coverage.csv").open()))[1]
+    assert row["missing_token_count"] == "0"
+    assert "definitions" in row["visual_reasons"]
+    assert row["verification_status"] == "pending"
+    assert not summary["verification_by_method"].get("automated_structural")

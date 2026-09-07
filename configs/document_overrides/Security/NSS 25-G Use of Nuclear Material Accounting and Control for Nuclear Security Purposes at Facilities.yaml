@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "8f1e7c44a8eb16ed833350f7e9f05814c9594c278b5f3e4ea78c6e1e6721bb1e"
+
 parser:
   label_exceptions:
     - element_type: paragraph

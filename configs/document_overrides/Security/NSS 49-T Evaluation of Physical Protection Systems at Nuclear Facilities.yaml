@@ -1,0 +1,14 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "a3f7c1e701661d74f09f7b8cfb9b4faa77282607ef396e42fedd88d04fd42876"
+
+# Source: physical pages 136–138. XVII–15(a) ends before TABLE XVII–5;
+# items (b)/(c) resume below its note on page 137 and continue on page 138.
+# Enable this continuation rule only for the publication checked against source.
+parser:
+  lettered_list_continuation_pages: [137]
+  outline_regions:
+  - pdf_pages: [137]
+    start_pattern: '^Note:\s+Using expert judgement'
+    element_id: TABLE XVII–5
+    title: Notes to TABLE XVII–5

@@ -59,9 +59,46 @@ flowchart LR
 2. **Identify:** infer the publication's title, series, category, and identifier; apply any configured overrides.
 3. **Parse:** walk lines in order, tracking the current section and separate buffers for prose, tables, and footnotes.
 4. **Check and export:** flag inconsistent records and write readable and machine-readable representations from the same records.
-5. **Audit:** use Poppler to extract source text independently, reconcile files and page coverage, and record pages requiring visual review.
+5. **Audit:** compare independent Poppler text and the PDF's bookmark outline, reconcile exports, and record the evidence and remaining source-review work.
 
 The parser uses deterministic Python rules. It does not call an LLM or require an API key.
+
+The rules now handle several patterns that previously needed handwritten
+document overrides. A raised footnote marker links a note to the paragraph
+containing that marker, even when other paragraphs appear before the footer.
+A bold glossary opening starts a definition; the same term in italic prose
+does not. Aligned, closely spaced bold heading lines can form one heading.
+Within a section, a clear size or italic-style distinction can establish a
+subheading's parent. Figures retain their own labels and notes, and detected
+table grids preserve shaded cells, including blank ones.
+
+These rules preserve PDF typography internally rather than rewriting scientific
+symbols. Plain text can still flatten positional superscripts and subscripts;
+the source PDF remains necessary for interpreting ambiguous notation. An
+uncertain footnote or layout association becomes an audit finding.
+
+Integration removed **239 override entries** across thirteen publications while
+preserving their verified substantive records. Damaged fonts, ambiguous layouts
+and artwork transcriptions still need source-bound configuration. The
+local integration report (`reviews/parser-integration-results.md`) distinguishes
+these staged results from completed source reviews.
+
+Image-only text needs an explicit, reviewed transcription before it can be
+included. Such records identify their origin, and the reading exports display
+a source note. They retain a reference to the whole source page.
+
+A source-backed example is the rotated categorization table in NSS-13. Its
+printed lines do not separate every uranium enrichment subrow. The
+[document override](configs/document_overrides/Security/NSS-13.yaml) records
+the reviewed cell boundaries and merged labels; cell text still comes directly
+from the PDF. The local validation record (`docs/validation.md`, NSS-13 checkpoint)
+explains how the table and its source references were checked.
+
+NSS-35-G shows why text alone is insufficient: it labels 118 actions beneath
+stages and responsible parties. Its
+[override](configs/document_overrides/Security/NSS-35-G.yaml) preserves each
+action as a separate paragraph, with a path such as
+`Stage 8 → Decommissioning stage actions → Operator actions` and its source page.
 
 ## Run your own publications
 
@@ -80,6 +117,8 @@ iaea-guidance-parser series inputs/Safety \
 ```
 
 Substitute your own input paths. For a trial run, add `--limit 1` and choose a separate output directory. `parse` handles one PDF; `batch` retains the original per-filename folder layout; `series` also produces combined outputs. See `iaea-guidance-parser COMMAND --help` for options.
+
+The supplied overrides identify their source PDF by SHA-256, the same hash recorded in publication metadata. PDF and YAML filenames can change without losing the match. See [Configuration](docs/configuration.md) for the `match.source_sha256` field and how to add an override.
 
 A successful complete recursive series run removes obsolete generated document folders. Limited, patterned, nonrecursive, or failed runs preserve them. A failed series run returns a nonzero exit status and records failures in the manifest.
 
@@ -113,20 +152,58 @@ For upload instructions and a suggested system prompt, see [Using the knowledge 
 
 ## Check accuracy against the source
 
-Source auditing additionally requires Poppler (`pdftotext`). Install it through your operating system's package manager, then run:
+Source auditing additionally requires Poppler (`pdftotext`; `pdftoppm` for visual review). Install it through your operating system's package manager, then run:
 
 ```bash
 iaea-guidance-parser audit inputs/Security \
   --parsed outputs/Security --out tmp/audit/Security
 ```
 
-The audit writes a summary, evidence-bearing findings, and a CSV covering every physical page. It checks canonical records against document outputs and Markdown, compares source text independently, and identifies pages for visual review. It never repairs or rewrites the parsed outputs.
+The audit writes a summary, evidence-bearing findings, a CSV covering every physical page, and a document-check ledger. It checks canonical records against document outputs and Markdown, compares source text independently, and identifies required source reviews. It never repairs or rewrites the parsed outputs.
 
-A token difference is a review candidate. PDF engines can disagree; line wrapping, source font encodings, hidden objects, diagrams, and intentional exclusions need inspection. The report distinguishes completed text checks from pending visual review. See [Source audit and review](docs/auditing.md) for the procedure and [Validation record](docs/validation.md) for the current corpus results and remaining work.
+A token difference is a review candidate. PDF engines can disagree; line wrapping, source font encodings, hidden objects, diagrams, and intentional exclusions need inspection. Heading-only pages can pass a strict comparison of wording, location, order and hierarchy against the source bookmark tree. Missing or ambiguous outline evidence leaves a page pending.
+
+NSS-10-G (Rev. 1) illustrates the limit of text matching: two subsection
+headings retained every word but were absorbed into preceding paragraphs.
+Visual review found the error. Its [source-bound override](configs/document_overrides/Security/NSS-10-G-REV1.yaml)
+now separates those headings and places the following paragraphs beneath them.
+
+NSS-24-G demonstrates why layout matters too: a figure note can retain every
+word while being attached to the wrong paragraph. Its reviewed figure bounds
+keep labels and notes with their captions. Its rating tables also retain cell
+shading: a blank shaded cell carries information that plain text would lose.
+Reading exports mark shaded cells explicitly; the marker is not source text.
+
+Pages containing footnotes also require their links to be checked visually;
+an outline cannot establish which paragraph a note belongs to. The source
+screen also flags note labels when the parser has absorbed a note into prose.
+Glossary and definition pages require visual checks of each term and its
+definition; a matching heading does not prove those relationships. Detailed
+copyright text is outside the current review scope, while publication
+identifiers remain required. Any other exclusion is recorded with its evidence
+and scope so that a pass does not imply every printed word was verified.
+
+Review records distinguish **visual inspection**, **automated structural verification**, and **verified equivalent evidence**. An inspected page can still be blocked by a defect. The small `tools/source_review.py` utility prepares bounded assignments with cached source images, validates returned decisions, and rejects stale evidence before merging it.
+
+**Complete source verification remains unfinished.** The pilot found both parser defects and mistaken review decisions; sampling caught errors that token checks missed. See [Source audit and review](docs/auditing.md) for the reproducible procedure and [Recorded source reviews](reviews/README.md) for the locations of local coverage reports, corrections and remaining work. Run artifacts are ignored by Git and are not included in a fresh checkout.
+
+Each completed publication gets an atomic checkpoint containing its corrected
+records, source evidence and review decisions. These staged results are kept
+separate from the combined corpus until regeneration and a fresh audit confirm
+that the records still match their reviews.
 
 ## Read or extend the code
 
 Start with `models.py`, then follow `IAEAGuidanceParser.parse()` in `parser.py`. Its named stages show the ordering that keeps table cells, captions, headings, and paragraphs distinct.
+
+Paragraphs that continue across pages remain one record. Footer notes follow
+the prose that starts above them, with a separate field identifying the note's
+actual anchor. This preserves reading order without splitting a paragraph at
+the page break.
+
+Specimen regulations and agreements keep their own headings and numbering.
+For example, an article in a sample regulation remains within that specimen,
+with its introductory guidance and source page available alongside it.
 
 | Module | Responsibility |
 | --- | --- |
@@ -137,7 +214,11 @@ Start with `models.py`, then follow `IAEAGuidanceParser.parse()` in `parser.py`.
 | `series.py` / `cli.py` | File discovery, configuration selection, and commands. |
 | `exporters.py` | Canonical and reader-facing outputs. |
 | `qa.py` / `audit.py` | Record consistency and independent source comparison. |
+| `outline.py` | Strict heading checks against source bookmarks and geometry. |
+| `reviews.py` | Review fingerprints, finding dispositions and evidence validation. |
 | `provenance.py` | File, configuration, and code fingerprints. |
+
+`tools/source_review.py` is a standalone preparation/merge helper. It launches no agents and makes no parser corrections; review judgment stays outside the deterministic parser.
 
 Tests are grouped by behavior and use small synthetic inputs. A useful contribution starts with a source-backed failing example, changes the smallest relevant rule, and checks both series for unintended effects.
 

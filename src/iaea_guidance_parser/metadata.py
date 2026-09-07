@@ -36,6 +36,21 @@ def load_config(path: Path | None) -> dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
+def config_source_sha256(config: dict[str, Any], label: str = "config") -> str | None:
+    """Read an exact source selector; absent selectors retain legacy behavior."""
+    if not isinstance(config, dict):
+        raise ValueError(f"{label}: configuration must be a mapping")
+    if "match" not in config:
+        return None
+    match = config["match"]
+    if not isinstance(match, dict) or set(match) != {"source_sha256"}:
+        raise ValueError(f"{label}: match must contain only source_sha256")
+    digest = match["source_sha256"]
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        raise ValueError(f"{label}: match.source_sha256 must be a 64-character SHA-256 hex string")
+    return digest.lower()
+
+
 def deep_merge(*configs: dict[str, Any] | None) -> dict[str, Any]:
     """Recursively merge dictionaries without mutating any input.
 

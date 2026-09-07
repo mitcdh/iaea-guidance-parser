@@ -55,7 +55,7 @@ def batch_parse(
         "--config-dir",
         exists=True,
         file_okay=False,
-        help="Optional directory of YAML configs keyed by PDF stem.",
+        help="YAML overrides matched by source SHA-256; legacy PDF filenames also supported.",
     ),
 ) -> None:
     """Parse all PDFs in a directory."""
@@ -97,7 +97,7 @@ def parse_series(
         "--config-dir",
         exists=True,
         file_okay=False,
-        help="Optional directory of per-document YAML configs keyed by PDF stem or filename.",
+        help="YAML overrides matched by source SHA-256; legacy PDF filenames also supported.",
     ),
     pattern: str = typer.Option(
         "*.pdf", "--pattern", help="Glob pattern for PDFs, e.g. '*.pdf' or 'PUB*.pdf'."
