@@ -1,0 +1,8 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "2e41ea1cddbeddf7191d51b37a2cfc163ecac570491951648f4c1665c4f8c643"
+
+# Physical PDF page 6 prints STI/PUB1981 without the usual second slash.
+# Preserve that source spelling; the generic STI/PUB/number matcher misses it.
+document:
+  sti_pub_number: STI/PUB1981

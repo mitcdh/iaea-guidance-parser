@@ -1,0 +1,103 @@
+# Source-inspected rules for NSS-15. Identity is independent of filenames.
+match:
+  source_sha256: 87896c9710e2da3aae32aad513cafc596a63bea36b343a6bfec943f4edf881de
+parser:
+  reading_order_pages:
+  - 5
+  - 47
+  image_transcriptions:
+    source_sha256: 87896c9710e2da3aae32aad513cafc596a63bea36b343a6bfec943f4edf881de
+    pages:
+      1:
+        lines:
+        - IAEA Nuclear Security Series No. 15
+        - Recommendations
+        - Nuclear Security Recommendations
+        - on Nuclear and Other Radioactive Material
+        - out of Regulatory Control
+        - Jointly sponsored by
+        - EUROPOL, IAEA, ICAO, ICPO-INTERPOL, UNICRI, UNODC, WCO
+        - IAEA
+        - International Atomic Energy Agency
+        reviewer: Source review coordinator
+        notes: Compared with rendered source and an independent transcription. Main prose, identifiers
+          and joint sponsorship preserved; decorative logo wordmarks are not duplicated. Whole-page references
+          only.
+      48:
+        lines:
+        - This publication provides recommendations to a
+        - State for the nuclear security of nuclear or other
+        - radioactive material that has been reported as being
+        - out of regulatory control, as well as for material that
+        - is lost, missing or stolen but has not been reported as
+        - such, or has been otherwise discovered. It includes
+        - recommendations for the detection and assessment
+        - of alarms and alerts and for a graded response to
+        - criminal or unauthorized acts with nuclear security
+        - implications involving nuclear or other radioactive
+        - material out of regulatory control. The recommended
+        - actions cover the confirmation of a credible threat,
+        - assessment and interdiction of an attempted act and
+        - response to a nuclear security event.
+        - INTERNATIONAL ATOMIC ENERGY AGENCY
+        - VIENNA
+        - ISBN 978–92–0–112210–0
+        - ISSN 1816–9317
+        reviewer: Source review coordinator
+        notes: Compared with rendered source and an independent transcription. Main prose, identifiers
+          and joint sponsorship preserved; decorative logo wordmarks are not duplicated. Whole-page references
+          only.
+  heading_continuations:
+  - pdf_pages:
+    - 26
+    lines:
+    - Operational information
+  - pdf_pages:
+    - 27
+    lines:
+    - Medical surveillance
+  - pdf_pages:
+    - 27
+    lines:
+    - Reporting regulatory non-compliance
+  - pdf_pages:
+    - 27
+    lines:
+    - Reporting loss of regulatory control
+  subheading_parents:
+    5. RECOMMENDATIONS ON DETECTION MEASURES:
+      Operational information:
+      - INFORMATION ALERTS
+      Medical surveillance:
+      - INFORMATION ALERTS
+      Reporting regulatory non-compliance:
+      - INFORMATION ALERTS
+      Reporting loss of regulatory control:
+      - INFORMATION ALERTS
+  page_regions:
+    2:
+      region: FrontMatter
+      section: THE IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    39:
+      region: Glossary
+      section: DEFINITIONS
+    44: BackMatter
+    45: BackMatter
+    46: BackMatter
+    47: BackMatter
+    48: BackMatter
+  footnote_pages:
+  - 11
+  - 13
+  - 17
+  - 19
+  - 20
+  - 29
+  - 31
+  - 32
+  - 35

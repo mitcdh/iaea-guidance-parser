@@ -1,0 +1,13 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "2e2be2d257dc2e1c74b59c189dfe921db456a6d09e3f0197cfe5c29cf0b0515b"
+
+parser:
+  # The printed caption is unpunctuated; restrict this interpretation to the
+  # reviewed page rather than accepting all inline references beginning “FIG.”.
+  label_exceptions:
+    - element_type: figure
+      pdf_page: 24
+      region: Body
+      raw_label: "FIG. 1"
+      canonical_id: "1"

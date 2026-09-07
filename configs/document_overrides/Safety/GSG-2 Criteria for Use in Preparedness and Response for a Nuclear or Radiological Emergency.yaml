@@ -1,0 +1,67 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "8ed694cb22d5c40e79f378396a4b0c9080c9fcbb37ccdb2bbc231e40c63cc1a9"
+
+# Source review: physical PDF pages 28, 53 and 54, checked against rendered pages.
+# The same embedded Symbol encoding supplies the listed glyphs on the scoped pages.
+# Other unknown symbols (including diagram markers and equation pieces) are unchanged.
+parser:
+  reviewed_equations:
+    source_sha256: 8ed694cb22d5c40e79f378396a4b0c9080c9fcbb37ccdb2bbc231e40c63cc1a9
+    items:
+    - pdf_page: 67
+      element_id: II.24
+      original_text: 'OIL6 is exceeded if the following condition is satisfied: C f i (6) , OIL6 1 Â > i i where Cf,i is the concentration of radionuclide i in the food, milk or water (Bq/kg); OIL6i is the concentration of radionuclide i from Table 10 (Bq/kg).'
+      linear_text: 'OIL6 is exceeded if the following condition is satisfied: ∑_i (C_{f,i} / OIL6_i) > 1 (6) where C_{f,i} is the concentration of radionuclide i in the food, milk or water (Bq/kg); OIL6_i is the concentration of radionuclide i from Table 10 (Bq/kg).'
+      reviewer: Source review coordinator
+      notes: PDF67/printed49 equation6 sums the concentration-to-OIL6 ratios over i.
+        Preserve its summation, drawn fraction bar, subscripts and strict inequality
+        in linear notation, with matching variable names in the two definitions.
+  # TABLE 10, PDF 59–64/printed 41–46: native raised spans encode powers
+  # of ten, isotope mass numbers and notes a–d. Preserve these visibly.
+  reviewed_superscripts:
+    source_sha256: 8ed694cb22d5c40e79f378396a4b0c9080c9fcbb37ccdb2bbc231e40c63cc1a9
+    pages: [59, 60, 61, 62, 63, 64]
+    reviewer: Source review coordinator
+    notes: Native raised spans distinguish 10⁴ from 104 and NAᵈ from NAd.
+      Read by source geometry so continuation captions precede their page rows.
+  font_decoders:
+  # PDF 59 TABLE 9 and TABLE 11 on 66–67: F020 encodes blank line-end space.
+  - pdf_pages: [59, 66, 67]
+    fonts: [Symbol]
+    replacements:
+      : ' '
+      : γ
+      : β
+      : α
+      : μ
+  - pdf_pages:
+    - 28
+    fonts:
+    - Symbol
+    replacements:
+      : Δ
+      : ≥
+      : ≤
+  - pdf_pages:
+    - 43
+    - 53
+    - 54
+    - 55
+    - 87
+    - 96
+    fonts:
+    - Symbol
+    replacements:
+      : γ
+      : β
+      : α
+      : μ
+  # Physical page 55: these notes belong to TABLE 8, which interrupts II.19.
+  # The paragraph resumes with "radionuclides" on page 56. Keep the source
+  # note and anchors a-k with the table instead of inserting them into prose.
+  outline_regions:
+  - pdf_pages: [55]
+    start_pattern: '^Note:\s+The OILs'
+    element_id: TABLE 8
+    title: Notes to TABLE 8

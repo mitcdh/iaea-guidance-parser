@@ -1,0 +1,14 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "16bbdf4ab6c2d197b4cce8e1f093bccca46550cc4b082a8e570f5a5529505ebe"
+
+document:
+  title: "Combating Illicit Trafficking in Nuclear and Other Radioactive Material"
+parser:
+  # Source page 79 (PDF page 91) visibly prints the less-than-or-equal sign in
+  # Table 1, but the legacy MTSymbol character map exposes it as a pound sign.
+  font_decoders:
+    - pdf_pages: [91]
+      fonts: [MTSymbol]
+      replacements:
+        "£": "≤"

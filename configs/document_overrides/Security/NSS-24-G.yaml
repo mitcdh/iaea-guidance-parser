@@ -1,0 +1,2115 @@
+# Source-bound table geometry/shading, note anchors, glossary and hierarchy.
+match:
+  source_sha256: 7f32a3a10cb234e3d36f306ebe09a6aa61f84db18bf9344d64944ed71263af6c
+parser:
+  reviewed_equations:
+    source_sha256: 7f32a3a10cb234e3d36f306ebe09a6aa61f84db18bf9344d64944ed71263af6c
+    items:
+    - pdf_page: 61
+      element_id: II.10
+      original_text: Normalized consequence rating = Value Max (Value) 100× (2)
+      linear_text: Normalized consequence rating = 100 × (Value / Max(Value)) (2)
+      reviewer: Source review coordinator
+      notes: Equation (2) on PDF61/printed51 places Value over Max(Value), with
+        a visible fraction bar, preceded by 100×. Preserve this division in
+        linear text; the extracted order loses the bar and misplaces the factor.
+  reading_order_pages:
+  - 1
+  - 3
+  - 5
+  - 72
+  - 77
+  - 84
+  page_reading_rotations:
+    32: 90
+  font_decoders:
+  - pdf_pages:
+    - 2
+    fonts:
+    - Symbol
+    replacements:
+      ●: ' '
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    10: FrontMatter
+    77:
+      region: Glossary
+      section: GLOSSARY
+    81: BackMatter
+    82: BackMatter
+    83: BackMatter
+    84: BackMatter
+  ignore_actual_text_pages:
+  - 11
+  - 12
+  - 15
+  - 44
+  - 55
+  - 60
+  - 61
+  subheading_parents:
+    5. THREAT AND RISK ASSESSMENTS METHODOLOGIES:
+      Threat narrative approach:
+      - THREAT ASSESSMENT METHODOLOGIES
+      Threat ranking approach:
+      - THREAT ASSESSMENT METHODOLOGIES
+      Risk registry methodology:
+      - RISK ASSESSMENT METHODOLOGIES
+      Probabilistic risk assessment methodology:
+      - RISK ASSESSMENT METHODOLOGIES
+      Assessing likelihood of risk scenarios:
+      - RISK ASSESSMENT METHODOLOGIES
+      Uncertainty analysis:
+      - RISK ASSESSMENT METHODOLOGIES
+    6. USE OF RISK INFORMED APPROACHES:
+      Gap analysis:
+      - IDENTIFICATION OF ALTERNATIVE NUCLEAR SECURITY SYSTEMS AND MEASURES
+      Cost–benefit analysis:
+      - IDENTIFICATION OF ALTERNATIVE NUCLEAR SECURITY SYSTEMS AND MEASURES
+      National capability analysis:
+      - IDENTIFICATION OF ALTERNATIVE NUCLEAR SECURITY SYSTEMS AND MEASURES
+      Evaluation of effectiveness:
+      - MANAGEMENT OF RISKS
+      Trend analysis:
+      - MANAGEMENT OF RISKS
+    Appendix II:
+      ASSESSMENT CONTEXT:
+      - THREAT ASSESSMENT EXAMPLE
+      IDENTIFICATION OF MATERIAL AND ADVERSARIES:
+      - THREAT ASSESSMENT EXAMPLE
+      IDENTIFICATION OF TARGETS:
+      - THREAT ASSESSMENT EXAMPLE
+      IDENTIFICATION OF CONSEQUENCES:
+      - THREAT ASSESSMENT EXAMPLE
+      THREAT ASSESSMENT:
+      - THREAT ASSESSMENT EXAMPLE
+    Appendix III:
+      SCENARIO STRUCTURE:
+      - RISK ASSESSMENT EXAMPLE
+      LIKELIHOOD ESTIMATION:
+      - RISK ASSESSMENT EXAMPLE
+      RISK ASSESSMENT:
+      - RISK ASSESSMENT EXAMPLE
+    Appendix IV:
+      IDENTIFICATION, PRIORITIZATION AND IMPLEMENTATION:
+      - RISK INFORMED APPROACH EXAMPLE
+      MANAGEMENT OF RISKS:
+      - RISK INFORMED APPROACH EXAMPLE
+  table_layouts:
+  - pdf_pages:
+    - 32
+    caption: TABLE 1. EXAMPLE OF A QUALITATIVE CONSEQUENCE MATRIX
+    bbox:
+    - 73
+    - 60
+    - 365
+    - 597
+    row_count: 5
+    column_count: 6
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 73
+      - 525
+      - 96
+      - 597
+    - row: 0
+      column: 1
+      bbox:
+      - 73
+      - 437
+      - 96
+      - 525
+    - row: 0
+      column: 2
+      bbox:
+      - 73
+      - 345
+      - 96
+      - 437
+    - row: 0
+      column: 3
+      bbox:
+      - 73
+      - 256
+      - 96
+      - 345
+    - row: 0
+      column: 4
+      bbox:
+      - 73
+      - 162
+      - 96
+      - 256
+    - row: 0
+      column: 5
+      bbox:
+      - 73
+      - 60
+      - 96
+      - 162
+    - row: 1
+      column: 0
+      bbox:
+      - 96
+      - 525
+      - 130
+      - 597
+    - row: 1
+      column: 1
+      bbox:
+      - 96
+      - 437
+      - 130
+      - 525
+    - row: 1
+      column: 2
+      bbox:
+      - 96
+      - 345
+      - 130
+      - 437
+    - row: 1
+      column: 3
+      bbox:
+      - 96
+      - 256
+      - 130
+      - 345
+    - row: 1
+      column: 4
+      bbox:
+      - 96
+      - 162
+      - 130
+      - 256
+    - row: 1
+      column: 5
+      bbox:
+      - 96
+      - 60
+      - 130
+      - 162
+    - row: 2
+      column: 0
+      bbox:
+      - 130
+      - 525
+      - 175
+      - 597
+    - row: 2
+      column: 1
+      bbox:
+      - 130
+      - 437
+      - 175
+      - 525
+    - row: 2
+      column: 2
+      bbox:
+      - 130
+      - 345
+      - 175
+      - 437
+    - row: 2
+      column: 3
+      bbox:
+      - 130
+      - 256
+      - 175
+      - 345
+    - row: 2
+      column: 4
+      bbox:
+      - 130
+      - 162
+      - 175
+      - 256
+    - row: 2
+      column: 5
+      bbox:
+      - 130
+      - 60
+      - 175
+      - 162
+    - row: 3
+      column: 0
+      bbox:
+      - 175
+      - 525
+      - 241
+      - 597
+    - row: 3
+      column: 1
+      bbox:
+      - 175
+      - 437
+      - 241
+      - 525
+    - row: 3
+      column: 2
+      bbox:
+      - 175
+      - 345
+      - 241
+      - 437
+    - row: 3
+      column: 3
+      bbox:
+      - 175
+      - 256
+      - 241
+      - 345
+    - row: 3
+      column: 4
+      bbox:
+      - 175
+      - 162
+      - 241
+      - 256
+    - row: 3
+      column: 5
+      bbox:
+      - 175
+      - 60
+      - 241
+      - 162
+    - row: 4
+      column: 0
+      bbox:
+      - 241
+      - 525
+      - 335
+      - 597
+    - row: 4
+      column: 1
+      bbox:
+      - 241
+      - 437
+      - 335
+      - 525
+    - row: 4
+      column: 2
+      bbox:
+      - 241
+      - 345
+      - 335
+      - 437
+    - row: 4
+      column: 3
+      bbox:
+      - 241
+      - 256
+      - 335
+      - 345
+    - row: 4
+      column: 4
+      bbox:
+      - 241
+      - 162
+      - 335
+      - 256
+    - row: 4
+      column: 5
+      bbox:
+      - 241
+      - 60
+      - 335
+      - 162
+  - pdf_pages:
+    - 39
+    caption: TABLE 2. EXAMPLE THREAT ASSESSMENT RESULTS IN NARRATIVE FORM
+    bbox:
+    - 56
+    - 90
+    - 400
+    - 431
+    row_count: 4
+    column_count: 3
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 90
+      - 94
+      - 115
+    - row: 0
+      column: 1
+      bbox:
+      - 94
+      - 90
+      - 263
+      - 115
+    - row: 0
+      column: 2
+      bbox:
+      - 263
+      - 90
+      - 400
+      - 115
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 115
+      - 94
+      - 191
+    - row: 1
+      column: 1
+      bbox:
+      - 94
+      - 115
+      - 263
+      - 191
+    - row: 1
+      column: 2
+      bbox:
+      - 263
+      - 115
+      - 400
+      - 191
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 191
+      - 94
+      - 257
+    - row: 2
+      column: 1
+      bbox:
+      - 94
+      - 191
+      - 263
+      - 257
+    - row: 2
+      column: 2
+      bbox:
+      - 263
+      - 191
+      - 400
+      - 257
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 257
+      - 94
+      - 399
+    - row: 3
+      column: 1
+      bbox:
+      - 94
+      - 257
+      - 263
+      - 399
+    - row: 3
+      column: 2
+      bbox:
+      - 263
+      - 257
+      - 400
+      - 399
+  - pdf_pages:
+    - 41
+    caption: TABLE 3. EXAMPLE WORD LADDER DESCRIBING OVERALL THREAT LEVELS
+    bbox:
+    - 56
+    - 275
+    - 400
+    - 560
+    row_count: 6
+    column_count: 2
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 275
+      - 137
+      - 310
+    - row: 0
+      column: 1
+      bbox:
+      - 137
+      - 275
+      - 400
+      - 310
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 310
+      - 137
+      - 357
+    - row: 1
+      column: 1
+      bbox:
+      - 137
+      - 310
+      - 400
+      - 357
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 357
+      - 137
+      - 405
+    - row: 2
+      column: 1
+      bbox:
+      - 137
+      - 357
+      - 400
+      - 405
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 405
+      - 137
+      - 463
+    - row: 3
+      column: 1
+      bbox:
+      - 137
+      - 405
+      - 400
+      - 463
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 463
+      - 137
+      - 511
+    - row: 4
+      column: 1
+      bbox:
+      - 137
+      - 463
+      - 400
+      - 511
+    - row: 5
+      column: 0
+      bbox:
+      - 56
+      - 511
+      - 137
+      - 560
+    - row: 5
+      column: 1
+      bbox:
+      - 137
+      - 511
+      - 400
+      - 560
+  - pdf_pages:
+    - 62
+    caption: TABLE 4. RELATIVE SEVERITY OF NOTIONAL SCENARIOS FROM EXAMPLE STATE
+    bbox:
+    - 56
+    - 90
+    - 400
+    - 386
+    row_count: 10
+    column_count: 4
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 90
+      - 174
+      - 136
+    - row: 0
+      column: 1
+      bbox:
+      - 174
+      - 90
+      - 248
+      - 136
+    - row: 0
+      column: 2
+      bbox:
+      - 248
+      - 90
+      - 322
+      - 136
+    - row: 0
+      column: 3
+      bbox:
+      - 322
+      - 90
+      - 400
+      - 136
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 136
+      - 174
+      - 160
+    - row: 1
+      column: 1
+      bbox:
+      - 174
+      - 136
+      - 248
+      - 160
+    - row: 1
+      column: 2
+      bbox:
+      - 248
+      - 136
+      - 322
+      - 160
+    - row: 1
+      column: 3
+      bbox:
+      - 322
+      - 136
+      - 400
+      - 160
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 160
+      - 174
+      - 183
+    - row: 2
+      column: 1
+      bbox:
+      - 174
+      - 160
+      - 248
+      - 183
+    - row: 2
+      column: 2
+      bbox:
+      - 248
+      - 160
+      - 322
+      - 183
+    - row: 2
+      column: 3
+      bbox:
+      - 322
+      - 160
+      - 400
+      - 183
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 183
+      - 174
+      - 206
+    - row: 3
+      column: 1
+      bbox:
+      - 174
+      - 183
+      - 248
+      - 206
+    - row: 3
+      column: 2
+      bbox:
+      - 248
+      - 183
+      - 322
+      - 206
+    - row: 3
+      column: 3
+      bbox:
+      - 322
+      - 183
+      - 400
+      - 206
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 206
+      - 174
+      - 230
+    - row: 4
+      column: 1
+      bbox:
+      - 174
+      - 206
+      - 248
+      - 230
+    - row: 4
+      column: 2
+      bbox:
+      - 248
+      - 206
+      - 322
+      - 230
+    - row: 4
+      column: 3
+      bbox:
+      - 322
+      - 206
+      - 400
+      - 230
+    - row: 5
+      column: 0
+      bbox:
+      - 56
+      - 230
+      - 174
+      - 253
+    - row: 5
+      column: 1
+      bbox:
+      - 174
+      - 230
+      - 248
+      - 253
+    - row: 5
+      column: 2
+      bbox:
+      - 248
+      - 230
+      - 322
+      - 253
+    - row: 5
+      column: 3
+      bbox:
+      - 322
+      - 230
+      - 400
+      - 253
+    - row: 6
+      column: 0
+      bbox:
+      - 56
+      - 253
+      - 174
+      - 276
+    - row: 6
+      column: 1
+      bbox:
+      - 174
+      - 253
+      - 248
+      - 276
+    - row: 6
+      column: 2
+      bbox:
+      - 248
+      - 253
+      - 322
+      - 276
+    - row: 6
+      column: 3
+      bbox:
+      - 322
+      - 253
+      - 400
+      - 276
+    - row: 7
+      column: 0
+      bbox:
+      - 56
+      - 276
+      - 174
+      - 300
+    - row: 7
+      column: 1
+      bbox:
+      - 174
+      - 276
+      - 248
+      - 300
+    - row: 7
+      column: 2
+      bbox:
+      - 248
+      - 276
+      - 322
+      - 300
+    - row: 7
+      column: 3
+      bbox:
+      - 322
+      - 276
+      - 400
+      - 300
+    - row: 8
+      column: 0
+      bbox:
+      - 56
+      - 300
+      - 174
+      - 323
+    - row: 8
+      column: 1
+      bbox:
+      - 174
+      - 300
+      - 248
+      - 323
+    - row: 8
+      column: 2
+      bbox:
+      - 248
+      - 300
+      - 322
+      - 323
+    - row: 8
+      column: 3
+      bbox:
+      - 322
+      - 300
+      - 400
+      - 323
+    - row: 9
+      column: 0
+      bbox:
+      - 56
+      - 323
+      - 174
+      - 346
+    - row: 9
+      column: 1
+      bbox:
+      - 174
+      - 323
+      - 248
+      - 346
+    - row: 9
+      column: 2
+      bbox:
+      - 248
+      - 323
+      - 322
+      - 346
+    - row: 9
+      column: 3
+      bbox:
+      - 322
+      - 323
+      - 400
+      - 346
+  - pdf_pages:
+    - 63
+    caption: TABLE 5. EXAMPLE THREAT NARRATIVE ANALYSIS CHART FOR THREE ADVERSARIES
+    bbox:
+    - 56
+    - 90
+    - 400
+    - 468
+    row_count: 4
+    column_count: 3
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 90
+      - 128
+      - 115
+    - row: 0
+      column: 1
+      bbox:
+      - 128
+      - 90
+      - 242
+      - 115
+    - row: 0
+      column: 2
+      bbox:
+      - 242
+      - 90
+      - 400
+      - 115
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 115
+      - 128
+      - 224
+    - row: 1
+      column: 1
+      bbox:
+      - 128
+      - 115
+      - 242
+      - 224
+    - row: 1
+      column: 2
+      bbox:
+      - 242
+      - 115
+      - 400
+      - 224
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 224
+      - 128
+      - 355
+    - row: 2
+      column: 1
+      bbox:
+      - 128
+      - 224
+      - 242
+      - 355
+    - row: 2
+      column: 2
+      bbox:
+      - 242
+      - 224
+      - 400
+      - 355
+    - row: 3
+      column: 0
+      bbox:
+      - 56
+      - 355
+      - 128
+      - 468
+    - row: 3
+      column: 1
+      bbox:
+      - 128
+      - 355
+      - 242
+      - 468
+    - row: 3
+      column: 2
+      bbox:
+      - 242
+      - 355
+      - 400
+      - 468
+  - pdf_pages:
+    - 64
+    caption: TABLE 6. EXAMPLE CAPABILITY AND INTENT THREAT RANKING
+    bbox:
+    - 56.911651611328125
+    - 172.14651489257812
+    - 397.13166427612305
+    - 345.6831970214844
+    row_count: 7
+    column_count: 6
+    retain_cell_shading: true
+    cells:
+    - row: 0
+      column: 0
+      row_span: 2
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 172.14651489257812
+      - 139.14759826660156
+      - 229.44268798828125
+    - row: 0
+      column: 1
+      row_span: 1
+      column_span: 3
+      bbox:
+      - 139.14759826660156
+      - 172.14651489257812
+      - 295.0531921386719
+      - 195.39459228515625
+    - row: 0
+      column: 4
+      row_span: 1
+      column_span: 2
+      bbox:
+      - 295.0531921386719
+      - 172.14651489257812
+      - 397.13166427612305
+      - 195.39459228515625
+    - row: 1
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 195.39459228515625
+      - 198.67520141601562
+      - 229.44268798828125
+    - row: 1
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 195.39459228515625
+      - 246.86415100097656
+      - 229.44268798828125
+    - row: 1
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 195.39459228515625
+      - 295.0531921386719
+      - 229.44268798828125
+    - row: 1
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 195.39459228515625
+      - 346.0768127441406
+      - 229.44268798828125
+    - row: 1
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 195.39459228515625
+      - 397.13166427612305
+      - 229.44268798828125
+    - row: 2
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 229.44268798828125
+      - 139.14759826660156
+      - 252.6907958984375
+    - row: 2
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 229.44268798828125
+      - 198.67520141601562
+      - 252.6907958984375
+    - row: 2
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 229.44268798828125
+      - 246.86415100097656
+      - 252.6907958984375
+    - row: 2
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 229.44268798828125
+      - 295.0531921386719
+      - 252.6907958984375
+    - row: 2
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 229.44268798828125
+      - 346.0768127441406
+      - 252.6907958984375
+    - row: 2
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 229.44268798828125
+      - 397.13166427612305
+      - 252.6907958984375
+    - row: 3
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 252.6907958984375
+      - 139.14759826660156
+      - 275.93890380859375
+    - row: 3
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 252.6907958984375
+      - 198.67520141601562
+      - 275.93890380859375
+    - row: 3
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 252.6907958984375
+      - 246.86415100097656
+      - 275.93890380859375
+    - row: 3
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 252.6907958984375
+      - 295.0531921386719
+      - 275.93890380859375
+    - row: 3
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 252.6907958984375
+      - 346.0768127441406
+      - 275.93890380859375
+    - row: 3
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 252.6907958984375
+      - 397.13166427612305
+      - 275.93890380859375
+    - row: 4
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 275.93890380859375
+      - 139.14759826660156
+      - 299.18701171875
+    - row: 4
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 275.93890380859375
+      - 198.67520141601562
+      - 299.18701171875
+    - row: 4
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 275.93890380859375
+      - 246.86415100097656
+      - 299.18701171875
+    - row: 4
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 275.93890380859375
+      - 295.0531921386719
+      - 299.18701171875
+    - row: 4
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 275.93890380859375
+      - 346.0768127441406
+      - 299.18701171875
+    - row: 4
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 275.93890380859375
+      - 397.13166427612305
+      - 299.18701171875
+    - row: 5
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 299.18701171875
+      - 139.14759826660156
+      - 322.4350891113281
+    - row: 5
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 299.18701171875
+      - 198.67520141601562
+      - 322.4350891113281
+    - row: 5
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 299.18701171875
+      - 246.86415100097656
+      - 322.4350891113281
+    - row: 5
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 299.18701171875
+      - 295.0531921386719
+      - 322.4350891113281
+    - row: 5
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 299.18701171875
+      - 346.0768127441406
+      - 322.4350891113281
+    - row: 5
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 299.18701171875
+      - 397.13166427612305
+      - 322.4350891113281
+    - row: 6
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 322.4350891113281
+      - 139.14759826660156
+      - 345.6831970214844
+    - row: 6
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 139.14759826660156
+      - 322.4350891113281
+      - 198.67520141601562
+      - 345.6831970214844
+    - row: 6
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 198.67520141601562
+      - 322.4350891113281
+      - 246.86415100097656
+      - 345.6831970214844
+    - row: 6
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 322.4350891113281
+      - 295.0531921386719
+      - 345.6831970214844
+    - row: 6
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 295.0531921386719
+      - 322.4350891113281
+      - 346.0768127441406
+      - 345.6831970214844
+    - row: 6
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 346.0768127441406
+      - 322.4350891113281
+      - 397.13166427612305
+      - 345.6831970214844
+  - pdf_pages:
+    - 64
+    caption: TABLE 7. EXAMPLE MATERIAL AND VULNERABILITY THREAT RANKING
+    bbox:
+    - 56.911651611328125
+    - 404.2292175292969
+    - 397.13166427612305
+    - 577.9678955078125
+    row_count: 7
+    column_count: 6
+    retain_cell_shading: true
+    cells:
+    - row: 0
+      column: 0
+      row_span: 2
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 404.2292175292969
+      - 133.47830200195312
+      - 461.7274169921875
+    - row: 0
+      column: 1
+      row_span: 1
+      column_span: 3
+      bbox:
+      - 133.47830200195312
+      - 404.2292175292969
+      - 283.7145080566406
+      - 427.67919921875
+    - row: 0
+      column: 4
+      row_span: 1
+      column_span: 2
+      bbox:
+      - 283.7145080566406
+      - 404.2292175292969
+      - 397.13166427612305
+      - 427.67919921875
+    - row: 1
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 427.67919921875
+      - 193.0059051513672
+      - 461.7274169921875
+    - row: 1
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 427.67919921875
+      - 246.86415100097656
+      - 461.7274169921875
+    - row: 1
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 427.67919921875
+      - 283.7145080566406
+      - 461.7274169921875
+    - row: 1
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 427.67919921875
+      - 337.57281494140625
+      - 461.7274169921875
+    - row: 1
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 427.67919921875
+      - 397.13166427612305
+      - 461.7274169921875
+    - row: 2
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 461.7274169921875
+      - 133.47830200195312
+      - 484.97552490234375
+    - row: 2
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 461.7274169921875
+      - 193.0059051513672
+      - 484.97552490234375
+    - row: 2
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 461.7274169921875
+      - 246.86415100097656
+      - 484.97552490234375
+    - row: 2
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 461.7274169921875
+      - 283.7145080566406
+      - 484.97552490234375
+    - row: 2
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 461.7274169921875
+      - 337.57281494140625
+      - 484.97552490234375
+    - row: 2
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 461.7274169921875
+      - 397.13166427612305
+      - 484.97552490234375
+    - row: 3
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 484.97552490234375
+      - 133.47830200195312
+      - 508.2236022949219
+    - row: 3
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 484.97552490234375
+      - 193.0059051513672
+      - 508.2236022949219
+    - row: 3
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 484.97552490234375
+      - 246.86415100097656
+      - 508.2236022949219
+    - row: 3
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 484.97552490234375
+      - 283.7145080566406
+      - 508.2236022949219
+    - row: 3
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 484.97552490234375
+      - 337.57281494140625
+      - 508.2236022949219
+    - row: 3
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 484.97552490234375
+      - 397.13166427612305
+      - 508.2236022949219
+    - row: 4
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 508.2236022949219
+      - 133.47830200195312
+      - 531.4716796875
+    - row: 4
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 508.2236022949219
+      - 193.0059051513672
+      - 531.4716796875
+    - row: 4
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 508.2236022949219
+      - 246.86415100097656
+      - 531.4716796875
+    - row: 4
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 508.2236022949219
+      - 283.7145080566406
+      - 531.4716796875
+    - row: 4
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 508.2236022949219
+      - 337.57281494140625
+      - 531.4716796875
+    - row: 4
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 508.2236022949219
+      - 397.13166427612305
+      - 531.4716796875
+    - row: 5
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 531.4716796875
+      - 133.47830200195312
+      - 554.7197875976562
+    - row: 5
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 531.4716796875
+      - 193.0059051513672
+      - 554.7197875976562
+    - row: 5
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 531.4716796875
+      - 246.86415100097656
+      - 554.7197875976562
+    - row: 5
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 531.4716796875
+      - 283.7145080566406
+      - 554.7197875976562
+    - row: 5
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 531.4716796875
+      - 337.57281494140625
+      - 554.7197875976562
+    - row: 5
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 531.4716796875
+      - 397.13166427612305
+      - 554.7197875976562
+    - row: 6
+      column: 0
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 56.911651611328125
+      - 554.7197875976562
+      - 133.47830200195312
+      - 577.9678955078125
+    - row: 6
+      column: 1
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 133.47830200195312
+      - 554.7197875976562
+      - 193.0059051513672
+      - 577.9678955078125
+    - row: 6
+      column: 2
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 193.0059051513672
+      - 554.7197875976562
+      - 246.86415100097656
+      - 577.9678955078125
+    - row: 6
+      column: 3
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 246.86415100097656
+      - 554.7197875976562
+      - 283.7145080566406
+      - 577.9678955078125
+    - row: 6
+      column: 4
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 283.7145080566406
+      - 554.7197875976562
+      - 337.57281494140625
+      - 577.9678955078125
+    - row: 6
+      column: 5
+      row_span: 1
+      column_span: 1
+      bbox:
+      - 337.57281494140625
+      - 554.7197875976562
+      - 397.13166427612305
+      - 577.9678955078125
+  - pdf_pages:
+    - 65
+    caption: TABLE 8. EXAMPLE SUMMARY THREAT RATING
+    bbox:
+    - 90.709
+    - 75.31
+    - 362.835
+    - 197.792
+    row_count: 6
+    column_count: 1
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 90.709
+      - 75.31
+      - 362.835
+      - 95.725
+    - row: 1
+      column: 0
+      bbox:
+      - 90.709
+      - 95.725
+      - 362.835
+      - 116.139
+    - row: 2
+      column: 0
+      bbox:
+      - 90.709
+      - 116.139
+      - 362.835
+      - 136.552
+    - row: 3
+      column: 0
+      bbox:
+      - 90.709
+      - 136.552
+      - 362.835
+      - 156.965
+    - row: 4
+      column: 0
+      bbox:
+      - 90.709
+      - 156.965
+      - 362.835
+      - 177.378
+    - row: 5
+      column: 0
+      bbox:
+      - 90.709
+      - 177.378
+      - 362.835
+      - 197.792
+    retain_cell_shading: true
+  - pdf_pages:
+    - 68
+    caption: TABLE 9. EXAMPLE RISK CALCULATIONS FOR TWO SCENARIOS
+    bbox:
+    - 56
+    - 272
+    - 400
+    - 470
+    row_count: 6
+    column_count: 3
+    cells:
+    - row: 0
+      column: 0
+      column_span: 3
+      bbox:
+      - 56
+      - 272
+      - 400
+      - 296
+    - row: 1
+      column: 0
+      bbox:
+      - 56
+      - 296
+      - 118
+      - 319
+    - row: 1
+      column: 1
+      bbox:
+      - 118
+      - 296
+      - 355
+      - 319
+    - row: 1
+      column: 2
+      bbox:
+      - 355
+      - 296
+      - 400
+      - 319
+    - row: 2
+      column: 0
+      bbox:
+      - 56
+      - 319
+      - 118
+      - 342
+    - row: 2
+      column: 1
+      bbox:
+      - 118
+      - 319
+      - 355
+      - 342
+    - row: 2
+      column: 2
+      bbox:
+      - 355
+      - 319
+      - 400
+      - 342
+    - row: 3
+      column: 0
+      column_span: 3
+      bbox:
+      - 56
+      - 342
+      - 400
+      - 377
+    - row: 4
+      column: 0
+      bbox:
+      - 56
+      - 377
+      - 118
+      - 400
+    - row: 4
+      column: 1
+      bbox:
+      - 118
+      - 377
+      - 355
+      - 400
+    - row: 4
+      column: 2
+      bbox:
+      - 355
+      - 377
+      - 400
+      - 400
+    - row: 5
+      column: 0
+      bbox:
+      - 56
+      - 400
+      - 118
+      - 423
+    - row: 5
+      column: 1
+      bbox:
+      - 118
+      - 400
+      - 355
+      - 423
+    - row: 5
+      column: 2
+      bbox:
+      - 355
+      - 400
+      - 400
+      - 423
+  - pdf_pages:
+    - 72
+    caption: TABLE 10. POTENTIAL NUCLEAR SECURITY SYSTEMS AND MEASURES FOR THE EXAMPLE
+      STATE
+    bbox:
+    - 56
+    - 90
+    - 400
+    - 537
+    row_count: 15
+    column_count: 3
+    cells:
+    - row: 0
+      column: 0
+      bbox:
+      - 56
+      - 90
+      - 121
+      - 125
+    - row: 0
+      column: 1
+      bbox:
+      - 121
+      - 90
+      - 200
+      - 125
+    - row: 0
+      column: 2
+      bbox:
+      - 200
+      - 90
+      - 400
+      - 125
+    - row: 1
+      column: 0
+      row_span: 3
+      bbox:
+      - 56
+      - 125
+      - 121
+      - 199
+    - row: 1
+      column: 1
+      bbox:
+      - 121
+      - 125
+      - 200
+      - 145
+    - row: 1
+      column: 2
+      bbox:
+      - 200
+      - 125
+      - 400
+      - 145
+    - row: 2
+      column: 1
+      bbox:
+      - 121
+      - 145
+      - 200
+      - 170
+    - row: 2
+      column: 2
+      bbox:
+      - 200
+      - 145
+      - 400
+      - 170
+    - row: 3
+      column: 1
+      bbox:
+      - 121
+      - 170
+      - 200
+      - 199
+    - row: 3
+      column: 2
+      bbox:
+      - 200
+      - 170
+      - 400
+      - 199
+    - row: 4
+      column: 0
+      row_span: 2
+      bbox:
+      - 56
+      - 199
+      - 121
+      - 259
+    - row: 4
+      column: 1
+      bbox:
+      - 121
+      - 199
+      - 200
+      - 219
+    - row: 4
+      column: 2
+      bbox:
+      - 200
+      - 199
+      - 400
+      - 219
+    - row: 5
+      column: 1
+      bbox:
+      - 121
+      - 219
+      - 200
+      - 259
+    - row: 5
+      column: 2
+      bbox:
+      - 200
+      - 219
+      - 400
+      - 259
+    - row: 6
+      column: 0
+      row_span: 3
+      bbox:
+      - 56
+      - 259
+      - 121
+      - 344
+    - row: 6
+      column: 1
+      bbox:
+      - 121
+      - 259
+      - 200
+      - 279
+    - row: 6
+      column: 2
+      bbox:
+      - 200
+      - 259
+      - 400
+      - 279
+    - row: 7
+      column: 1
+      bbox:
+      - 121
+      - 279
+      - 200
+      - 315
+    - row: 7
+      column: 2
+      bbox:
+      - 200
+      - 279
+      - 400
+      - 315
+    - row: 8
+      column: 1
+      bbox:
+      - 121
+      - 315
+      - 200
+      - 344
+    - row: 8
+      column: 2
+      bbox:
+      - 200
+      - 315
+      - 400
+      - 344
+    - row: 9
+      column: 0
+      row_span: 4
+      bbox:
+      - 56
+      - 344
+      - 121
+      - 478
+    - row: 9
+      column: 1
+      bbox:
+      - 121
+      - 344
+      - 200
+      - 364
+    - row: 9
+      column: 2
+      bbox:
+      - 200
+      - 344
+      - 400
+      - 364
+    - row: 10
+      column: 1
+      bbox:
+      - 121
+      - 364
+      - 200
+      - 411
+    - row: 10
+      column: 2
+      bbox:
+      - 200
+      - 364
+      - 400
+      - 411
+    - row: 11
+      column: 1
+      bbox:
+      - 121
+      - 411
+      - 200
+      - 448
+    - row: 11
+      column: 2
+      bbox:
+      - 200
+      - 411
+      - 400
+      - 448
+    - row: 12
+      column: 1
+      bbox:
+      - 121
+      - 448
+      - 200
+      - 478
+    - row: 12
+      column: 2
+      bbox:
+      - 200
+      - 448
+      - 400
+      - 478
+    - row: 13
+      column: 0
+      row_span: 2
+      bbox:
+      - 56
+      - 478
+      - 121
+      - 537
+    - row: 13
+      column: 1
+      bbox:
+      - 121
+      - 478
+      - 200
+      - 507
+    - row: 13
+      column: 2
+      bbox:
+      - 200
+      - 478
+      - 400
+      - 507
+    - row: 14
+      column: 1
+      bbox:
+      - 121
+      - 507
+      - 200
+      - 537
+    - row: 14
+      column: 2
+      bbox:
+      - 200
+      - 507
+      - 400
+      - 537
+  figure_layouts:
+    source_sha256: 7f32a3a10cb234e3d36f306ebe09a6aa61f84db18bf9344d64944ed71263af6c
+    pages:
+      35:
+      - caption: FIG. 2. Relationship between threat and risk and supporting components.
+        bbox:
+        - 56
+        - 62
+        - 400
+        - 250
+        transcription:
+          text: RISK
+          reviewer: Source review coordinator
+          notes: Independent review identified the missing top label and confirmed RISK on the
+            physical35 source image. This artwork has no native text. Geometry denotes
+            the full reviewed figure region, not individual letters.
+      46:
+      - caption: FIG. 4. Example all hazards risk registry used for prioritizing resources
+          among all hazards.
+        bbox:
+        - 56
+        - 58
+        - 400
+        - 311
+      47:
+      - caption: FIG. 5. Example event tree for developing risk scenarios.
+        bbox:
+        - 56
+        - 56
+        - 400
+        - 269
+      67:
+      - caption: FIG. 8. Event tree with two example scenarios highlighted.
+        bbox:
+        - 56
+        - 56
+        - 400
+        - 431
+      69:
+      - caption: FIG. 9. Two examples of risk depiction.
+        bbox:
+        - 55
+        - 409
+        - 400
+        - 566
+      70:
+      - caption: FIG. 10. Example risk plot including uncertainty bands.
+        bbox:
+        - 105
+        - 341
+        - 344
+        - 514
+      73:
+      - caption: FIG. 11. Cost–benefit analysis chart showing security options and
+          chosen option.
+        bbox:
+        - 80
+        - 56
+        - 380
+        - 230
+  footnote_pages:
+  - 11
+  - 12
+  - 14
+  - 19
+  - 22
+  - 24
+  - 30
+  - 31
+  - 33
+  - 78

@@ -1,0 +1,14 @@
+# Source reviewed against the rendered PDF. These are citations after scientific symbols,
+# not exponents; explicit ownership preserves both notation and the note link.
+match:
+  source_sha256: 338d7a11a3e38f472391c37a903040a4e9c0b74c8b37c3a5586a8a2d64d5d952
+parser:
+  footnote_anchors:
+  - pdf_pages:
+    - 43
+    footnote_id: '22'
+    element_id: '4.7'
+    text: 241Am22
+    section_path:
+    - 4. MONITORING FOR RADIOACTIVE MATERIAL
+    - GENERAL

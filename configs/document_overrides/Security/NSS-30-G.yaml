@@ -1,0 +1,28 @@
+# Source-specific corrections; the PDF hash, not this filename, selects them.
+match:
+  source_sha256: "48803d8dc605e992772bf199de983799882bf4e14e0f7068405587b34ac09b90"
+
+parser:
+  reading_order_pages: [39, 40]
+  # ActualText on these pages duplicates visible list markers in extracted text.
+  # Use underlying glyphs for both text and source geometry; retain default extraction elsewhere.
+  ignore_actual_text_pages: [2, 11, 12, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33]
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    37: BackMatter
+    39: BackMatter
+    40: BackMatter
+  footnote_pages: [13, 21]
+  footnote_anchors:
+    - pdf_pages: [21]
+      footnote_id: "2"
+      element_id: "2.28"
+      text: "[11]2"
+      section_path: ["2. NATIONAL SUSTAINABILITY OBJECTIVES", "CONDUCTING EFFECTIVE PLANNING AND ORGANIZATION"]

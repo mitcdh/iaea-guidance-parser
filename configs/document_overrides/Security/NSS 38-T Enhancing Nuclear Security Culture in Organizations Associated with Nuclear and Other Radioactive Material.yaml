@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "fd909fe72ba87d3e82ed7625b059a7ba307e8fa32a81c5e31f2bc9cad4d9431d"
+
 # Official source:
 # https://www.iaea.org/publications/13405/enhancing-nuclear-security-culture-in-organizations-associated-with-nuclear-and-other-radioactive-material
 document:
@@ -10,3 +14,14 @@ document:
   document_type: "technical_guidance"
   sti_pub_number: "STI/PUB/1874"
   isbn_pdf: "978-92-0-161819-1"
+
+parser:
+  # PDF 54 introduces the management-system tables; PDF 58 ends the prose
+  # subsections and directs readers to printed page 122 (PDF 132). Tables
+  # II–1 through II–17 occupy PDF 59–131 and serve those separate subsections.
+  # Keep this shared block in Annex II instead of inheriting "Record keeping",
+  # the last prose subsection. This does not claim a table-cell source review.
+  page_regions:
+    59:
+      region: Annex
+      section: Annex II

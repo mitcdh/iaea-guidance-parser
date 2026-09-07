@@ -1,0 +1,601 @@
+# Exact source geometry, wording and boundaries; selection is by source hash.
+match:
+  source_sha256: 6fde17aa33f9ae1755f583a4a7b223ce7eee8b049948255079ffec04cd3d42c0
+parser:
+  # Retain the visible hyphen in these source compounds across line wraps.
+  # off-site also appears intact elsewhere; non-arrival is printed on PDF 53.
+  hyphenated_words: [off-site, non-arrival]
+  reading_order_pages:
+  - 1
+  - 5
+  - 75
+  - 76
+  page_reading_rotations:
+    32: 90
+  table_layouts:
+  - pdf_pages:
+    - 32
+    caption: TABLE 1. CATEGORIZATION OF NUCLEAR MATERIAL
+    bbox:
+    - 75
+    - 62.15
+    - 301
+    - 596.6
+    row_count: 8
+    column_count: 5
+    cells:
+    - row: 0
+      column: 0
+      row_span: 1
+      bbox:
+      - 75
+      - 406.35
+      - 92
+      - 596.6
+    - row: 0
+      column: 1
+      row_span: 1
+      bbox:
+      - 75
+      - 306.93
+      - 92
+      - 406.35
+    - row: 0
+      column: 2
+      row_span: 1
+      bbox:
+      - 75
+      - 225.33
+      - 92
+      - 306.93
+    - row: 0
+      column: 3
+      row_span: 1
+      bbox:
+      - 75
+      - 143.79
+      - 92
+      - 225.33
+    - row: 0
+      column: 4
+      row_span: 1
+      bbox:
+      - 75
+      - 62.15
+      - 92
+      - 143.79
+    - row: 1
+      column: 0
+      row_span: 1
+      bbox:
+      - 92
+      - 406.35
+      - 121
+      - 596.6
+    - row: 1
+      column: 1
+      row_span: 1
+      bbox:
+      - 92
+      - 306.93
+      - 121
+      - 406.35
+    - row: 1
+      column: 2
+      row_span: 1
+      bbox:
+      - 92
+      - 225.33
+      - 121
+      - 306.93
+    - row: 1
+      column: 3
+      row_span: 1
+      bbox:
+      - 92
+      - 143.79
+      - 121
+      - 225.33
+    - row: 1
+      column: 4
+      row_span: 1
+      bbox:
+      - 92
+      - 62.15
+      - 121
+      - 143.79
+    - row: 2
+      column: 0
+      row_span: 4
+      bbox:
+      - 121
+      - 406.35
+      - 219
+      - 596.6
+    - row: 2
+      column: 1
+      row_span: 1
+      bbox:
+      - 121
+      - 306.93
+      - 133.5
+      - 406.35
+    - row: 2
+      column: 2
+      row_span: 1
+      bbox:
+      - 121
+      - 225.33
+      - 133.5
+      - 306.93
+    - row: 2
+      column: 3
+      row_span: 1
+      bbox:
+      - 121
+      - 143.79
+      - 133.5
+      - 225.33
+    - row: 2
+      column: 4
+      row_span: 1
+      bbox:
+      - 121
+      - 62.15
+      - 133.5
+      - 143.79
+    - row: 3
+      column: 1
+      row_span: 1
+      bbox:
+      - 133.5
+      - 306.93
+      - 156.5
+      - 406.35
+    - row: 3
+      column: 2
+      row_span: 1
+      bbox:
+      - 133.5
+      - 225.33
+      - 156.5
+      - 306.93
+    - row: 3
+      column: 3
+      row_span: 1
+      bbox:
+      - 133.5
+      - 143.79
+      - 156.5
+      - 225.33
+    - row: 3
+      column: 4
+      row_span: 1
+      bbox:
+      - 133.5
+      - 62.15
+      - 156.5
+      - 143.79
+    - row: 4
+      column: 1
+      row_span: 1
+      bbox:
+      - 156.5
+      - 306.93
+      - 182.5
+      - 406.35
+    - row: 4
+      column: 2
+      row_span: 1
+      bbox:
+      - 156.5
+      - 225.33
+      - 182.5
+      - 306.93
+    - row: 4
+      column: 3
+      row_span: 1
+      bbox:
+      - 156.5
+      - 143.79
+      - 182.5
+      - 225.33
+    - row: 4
+      column: 4
+      row_span: 1
+      bbox:
+      - 156.5
+      - 62.15
+      - 182.5
+      - 143.79
+    - row: 5
+      column: 1
+      row_span: 1
+      bbox:
+      - 182.5
+      - 306.93
+      - 219
+      - 406.35
+    - row: 5
+      column: 2
+      row_span: 1
+      bbox:
+      - 182.5
+      - 225.33
+      - 219
+      - 306.93
+    - row: 5
+      column: 3
+      row_span: 1
+      bbox:
+      - 182.5
+      - 143.79
+      - 219
+      - 225.33
+    - row: 5
+      column: 4
+      row_span: 1
+      bbox:
+      - 182.5
+      - 62.15
+      - 219
+      - 143.79
+    - row: 6
+      column: 0
+      row_span: 1
+      bbox:
+      - 219
+      - 406.35
+      - 245
+      - 596.6
+    - row: 6
+      column: 1
+      row_span: 1
+      bbox:
+      - 219
+      - 306.93
+      - 245
+      - 406.35
+    - row: 6
+      column: 2
+      row_span: 1
+      bbox:
+      - 219
+      - 225.33
+      - 245
+      - 306.93
+    - row: 6
+      column: 3
+      row_span: 1
+      bbox:
+      - 219
+      - 143.79
+      - 245
+      - 225.33
+    - row: 6
+      column: 4
+      row_span: 1
+      bbox:
+      - 219
+      - 62.15
+      - 245
+      - 143.79
+    - row: 7
+      column: 0
+      row_span: 1
+      bbox:
+      - 245
+      - 406.35
+      - 301
+      - 596.6
+    - row: 7
+      column: 1
+      row_span: 1
+      bbox:
+      - 245
+      - 306.93
+      - 301
+      - 406.35
+    - row: 7
+      column: 2
+      row_span: 1
+      bbox:
+      - 245
+      - 225.33
+      - 301
+      - 306.93
+    - row: 7
+      column: 3
+      row_span: 1
+      bbox:
+      - 245
+      - 143.79
+      - 301
+      - 225.33
+    - row: 7
+      column: 4
+      row_span: 1
+      bbox:
+      - 245
+      - 62.15
+      - 301
+      - 143.79
+  outline_regions:
+  - pdf_pages:
+    - 32
+    start_pattern: ^Note:\s+This table
+    element_id: TABLE 1
+    title: Notes to TABLE 1
+  heading_continuations:
+  - pdf_pages:
+    - 19
+    lines:
+    - Legislative and regulatory framework
+  - pdf_pages:
+    - 21
+    lines:
+    - Competent authority
+  - pdf_pages:
+    - 22
+    lines:
+    - Responsibilities of the licence holders
+  - pdf_pages:
+    - 25
+    lines:
+    - Risk management
+  - pdf_pages:
+    - 26
+    lines:
+    - Graded approach
+  - pdf_pages:
+    - 27
+    lines:
+    - Defence in depth
+  - pdf_pages:
+    - 27
+    lines:
+    - Security culture
+  - pdf_pages:
+    - 28
+    lines:
+    - Quality assurance
+  - pdf_pages:
+    - 28
+    lines:
+    - Confidentiality
+  - pdf_pages:
+    - 29
+    lines:
+    - Sustainability programme
+  - pdf_pages:
+    - 30
+    lines:
+    - Basis for concern
+  - pdf_pages:
+    - 31
+    lines:
+    - Categorization
+  - pdf_pages:
+    - 33
+    lines:
+    - General
+  - pdf_pages:
+    - 34
+    lines:
+    - Requirements for Categories I, II and III nuclear material
+  - pdf_pages:
+    - 34
+    lines:
+    - Requirements for Categories I and II nuclear material
+  - pdf_pages:
+    - 37
+    lines:
+    - Requirements for Category I nuclear material
+  - pdf_pages:
+    - 38
+    lines:
+    - Scope and boundary
+  - pdf_pages:
+    - 39
+    lines:
+    - Requirements for the State
+  - pdf_pages:
+    - 39
+    lines:
+    - Requirements for the operator
+  - pdf_pages:
+    - 44
+    lines:
+    - Requirements for high consequence facilities including nuclear power plants
+  - pdf_pages:
+    - 47
+    lines:
+    - Requirements for other nuclear facilities and nuclear material
+  - pdf_pages:
+    - 48
+    lines:
+    - Scope and boundary
+  - pdf_pages:
+    - 48
+    lines:
+    - Requirements for the State
+  - pdf_pages:
+    - 49
+    lines:
+    - Requirements for the operator
+  - pdf_pages:
+    - 51
+    lines:
+    - General
+  - pdf_pages:
+    - 51
+    lines:
+    - Common requirements for transport of nuclear material
+  - pdf_pages:
+    - 52
+    lines:
+    - Requirements for Categories I, II and III nuclear material
+  - pdf_pages:
+    - 53
+    lines:
+    - Requirements for Categories I and II nuclear material
+  - pdf_pages:
+    - 55
+    lines:
+    - Requirements for Category I nuclear material
+  - pdf_pages:
+    - 57
+    lines:
+    - Scope and boundary
+  - pdf_pages:
+    - 57
+    lines:
+    - Requirements for the State
+  - pdf_pages:
+    - 58
+    lines:
+    - Requirements for the carrier
+  - pdf_pages:
+    - 59
+    lines:
+    - Scope and boundary
+  - pdf_pages:
+    - 60
+    lines:
+    - Requirements for the State
+  - pdf_pages:
+    - 61
+    lines:
+    - Requirements for the carrier
+  subheading_parents:
+    3. ELEMENTS OF A STATE’S PHYSICAL PROTECTION REGIME FOR NUCLEAR MATERIAL AND NUCLEAR FACILITIES:
+      Legislative and regulatory framework:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Competent authority:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Responsibilities of the licence holders:
+      - LEGISLATIVE AND REGULATORY FRAMEWORK
+      Risk management:
+      - RISK BASED PHYSICAL PROTECTION SYSTEM AND MEASURES
+      Graded approach:
+      - RISK BASED PHYSICAL PROTECTION SYSTEM AND MEASURES
+      Defence in depth:
+      - RISK BASED PHYSICAL PROTECTION SYSTEM AND MEASURES
+      Security culture:
+      - SUSTAINING THE PHYSICAL PROTECTION REGIME
+      Quality assurance:
+      - SUSTAINING THE PHYSICAL PROTECTION REGIME
+      Confidentiality:
+      - SUSTAINING THE PHYSICAL PROTECTION REGIME
+      Sustainability programme:
+      - SUSTAINING THE PHYSICAL PROTECTION REGIME
+    4. REQUIREMENTS FOR MEASURES AGAINST UNAUTHORIZED REMOVAL OF NUCLEAR MATERIAL IN USE AND STORAGE:
+      Basis for concern:
+      - GENERAL
+      Categorization:
+      - GENERAL
+      General:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST UNAUTHORIZED REMOVAL IN USE AND STORAGE
+      Requirements for Categories I, II and III nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST UNAUTHORIZED REMOVAL IN USE AND STORAGE
+      Requirements for Categories I and II nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST UNAUTHORIZED REMOVAL IN USE AND STORAGE
+      Requirements for Category I nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST UNAUTHORIZED REMOVAL IN USE AND STORAGE
+      Scope and boundary:
+      - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER MISSING OR STOLEN NUCLEAR MATERIAL
+      Requirements for the State:
+      - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER MISSING OR STOLEN NUCLEAR MATERIAL
+      Requirements for the operator:
+      - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER MISSING OR STOLEN NUCLEAR MATERIAL
+    5. REQUIREMENTS FOR MEASURES AGAINST SABOTAGE OF NUCLEAR FACILITIES AND NUCLEAR MATERIAL IN USE AND STORAGE:
+      Requirements for high consequence facilities including nuclear power plants:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST SABOTAGE AT NUCLEAR FACILITIES
+      Requirements for other nuclear facilities and nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION AGAINST SABOTAGE AT NUCLEAR FACILITIES
+      Scope and boundary:
+      - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+      Requirements for the State:
+      - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+      Requirements for the operator:
+      - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+    6. REQUIREMENTS FOR MEASURES AGAINST UNAUTHORIZED REMOVAL AND SABOTAGE OF NUCLEAR MATERIAL DURING TRANSPORT:
+      General:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION OF NUCLEAR MATERIAL AGAINST UNAUTHORIZED REMOVAL DURING TRANSPORT
+      Common requirements for transport of nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION OF NUCLEAR MATERIAL AGAINST UNAUTHORIZED REMOVAL DURING TRANSPORT
+      Requirements for Categories I, II and III nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION OF NUCLEAR MATERIAL AGAINST UNAUTHORIZED REMOVAL DURING TRANSPORT
+      Requirements for Categories I and II nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION OF NUCLEAR MATERIAL AGAINST UNAUTHORIZED REMOVAL DURING TRANSPORT
+      Requirements for Category I nuclear material:
+      - REQUIREMENTS FOR PHYSICAL PROTECTION OF NUCLEAR MATERIAL AGAINST UNAUTHORIZED REMOVAL DURING TRANSPORT
+      Scope and boundary:
+        57:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        58:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        59:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        60:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        61:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+      Requirements for the State:
+        57:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        58:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        59:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        60:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        61:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+      Requirements for the carrier:
+        57:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        58:
+        - REQUIREMENTS FOR MEASURES TO LOCATE AND RECOVER NUCLEAR MATERIAL MISSING OR STOLEN DURING TRANSPORT
+        59:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        60:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+        61:
+        - REQUIREMENTS FOR ASSOCIATED MEASURES TO MITIGATE OR MINIMIZE THE RADIOLOGICAL CONSEQUENCES OF SABOTAGE
+          DURING TRANSPORT
+  page_regions:
+    2:
+      region: FrontMatter
+      section: THE IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    63:
+      region: Glossary
+      section: DEFINITIONS
+    68: BackMatter
+    70: BackMatter
+    71: BackMatter
+    72: BackMatter
+    73: BackMatter
+    74: BackMatter
+    75: BackMatter
+    76: BackMatter
+    62: BackMatter
+  footnote_pages:
+  - 13
+  - 14
+  - 19
+  - 21
+  - 30

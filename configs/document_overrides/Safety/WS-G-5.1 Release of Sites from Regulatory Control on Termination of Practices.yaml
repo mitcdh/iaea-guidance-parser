@@ -1,0 +1,14 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "424b3a61f1a0f87fec8b7abe65f6b257c07b9a1f4d88497418528c747046635a"
+
+document:
+  title: "Release of Sites from Regulatory Control on Termination of Practices"
+parser:
+  font_decoders:
+    - pdf_pages: [1, 48, 49]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29
+    - pdf_pages: [2]
+      fonts: [TimesTen-Roman, TimesTen-Bold, TimesTen-Italic]
+      ascii_offset: 31

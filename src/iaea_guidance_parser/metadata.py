@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-import hashlib
 import re
-from pathlib import Path
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 import yaml
 
 from .models import DocumentMetadata, PageText
-from .rules import KNOWN_DOCUMENT_CATEGORIES, KNOWN_PUBLICATION_HEADINGS, canonical_dash, slugify_category
-
+from .provenance import fingerprint, sha256_file
+from .rules import (
+    KNOWN_DOCUMENT_CATEGORIES,
+    KNOWN_PUBLICATION_HEADINGS,
+    canonical_dash,
+    slugify_category,
+)
 
 DOCUMENT_CATEGORY_ALIASES = {
     "Implementing Guide": "Implementing Guides",
@@ -20,15 +24,9 @@ DOCUMENT_CATEGORY_ALIASES = {
     "Safety Guides": "Safety Guide",
 }
 
-DOCUMENT_CATEGORY_LABELS = tuple(dict.fromkeys([*KNOWN_DOCUMENT_CATEGORIES.keys(), *DOCUMENT_CATEGORY_ALIASES.keys()]))
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
+DOCUMENT_CATEGORY_LABELS = tuple(
+    dict.fromkeys([*KNOWN_DOCUMENT_CATEGORIES.keys(), *DOCUMENT_CATEGORY_ALIASES.keys()])
+)
 
 
 def load_config(path: Path | None) -> dict[str, Any]:
@@ -36,6 +34,21 @@ def load_config(path: Path | None) -> dict[str, Any]:
         return {}
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def config_source_sha256(config: dict[str, Any], label: str = "config") -> str | None:
+    """Read an exact source selector; absent selectors retain legacy behavior."""
+    if not isinstance(config, dict):
+        raise ValueError(f"{label}: configuration must be a mapping")
+    if "match" not in config:
+        return None
+    match = config["match"]
+    if not isinstance(match, dict) or set(match) != {"source_sha256"}:
+        raise ValueError(f"{label}: match must contain only source_sha256")
+    digest = match["source_sha256"]
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        raise ValueError(f"{label}: match.source_sha256 must be a 64-character SHA-256 hex string")
+    return digest.lower()
 
 
 def deep_merge(*configs: dict[str, Any] | None) -> dict[str, Any]:
@@ -62,7 +75,9 @@ def _deep_merge_two(left: dict[str, Any], right: dict[str, Any]) -> dict[str, An
     return out
 
 
-def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any] | None = None) -> DocumentMetadata:
+def infer_metadata(
+    pdf_path: Path, pages: list[PageText], config: dict[str, Any] | None = None
+) -> DocumentMetadata:
     config = config or {}
     cfg_doc = config.get("document", {}) or {}
     cfg_fallback = config.get("fallbacks", {}) or {}
@@ -71,32 +86,60 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
 
     title, title_source = _resolve_title(pdf_path, first_text, pages[:10], cfg_doc, cfg_fallback)
     inferred_series_name = _infer_series_name(first_text)
-    series_name = cfg_doc.get("series_name") or inferred_series_name or cfg_fallback.get("series_name", "")
+    series_name = (
+        cfg_doc.get("series_name") or inferred_series_name or cfg_fallback.get("series_name", "")
+    )
     series_number = (
         cfg_doc.get("series_number")
         or _infer_series_number(first_text)
         or _infer_series_number_from_filename(pdf_path)
         or cfg_fallback.get("series_number", "")
     )
-    domain = cfg_doc.get("document_domain") or cfg_fallback.get("document_domain") or _infer_document_domain(first_text, series_name)
+    domain = (
+        cfg_doc.get("document_domain")
+        or cfg_fallback.get("document_domain")
+        or _infer_document_domain(first_text, series_name)
+    )
     inferred_category = _infer_category(
         first_text,
         series_number=series_number,
         document_domain=domain,
         source_name=pdf_path.name,
     )
-    category = cfg_doc.get("document_category") or inferred_category or cfg_fallback.get("document_category", "")
-    document_type = cfg_doc.get("document_type") or (slugify_category(category) if category else cfg_fallback.get("document_type", ""))
-    year = cfg_doc.get("publication_year") or _infer_year(first_text) or cfg_fallback.get("publication_year")
-    sti = cfg_doc.get("sti_pub_number") or _infer_sti(all_text) or cfg_fallback.get("sti_pub_number", "")
-    isbn_pdf = cfg_doc.get("isbn_pdf") or _infer_isbn_pdf(all_text) or cfg_fallback.get("isbn_pdf", "")
-    family = cfg_doc.get("document_family") or series_name or cfg_fallback.get("document_family", "")
-    document_id = cfg_doc.get("document_id") or _make_document_id(series_number, title, series_name, domain)
+    category = (
+        cfg_doc.get("document_category")
+        or inferred_category
+        or cfg_fallback.get("document_category", "")
+    )
+    document_type = cfg_doc.get("document_type") or (
+        slugify_category(category) if category else cfg_fallback.get("document_type", "")
+    )
+    year = (
+        cfg_doc.get("publication_year")
+        or _infer_year(first_text)
+        or cfg_fallback.get("publication_year")
+    )
+    sti = (
+        cfg_doc.get("sti_pub_number")
+        or _infer_sti(all_text)
+        or cfg_fallback.get("sti_pub_number", "")
+    )
+    isbn_pdf = (
+        cfg_doc.get("isbn_pdf") or _infer_isbn_pdf(all_text) or cfg_fallback.get("isbn_pdf", "")
+    )
+    family = (
+        cfg_doc.get("document_family") or series_name or cfg_fallback.get("document_family", "")
+    )
+    document_id = cfg_doc.get("document_id") or _make_document_id(
+        series_number, title, series_name, domain
+    )
 
     return DocumentMetadata(
         document_id=document_id,
         source_file=str(pdf_path),
         source_sha256=sha256_file(pdf_path),
+        page_count=len(pages),
+        config_sha256=fingerprint(config),
         title=title,
         subtitle=cfg_doc.get("subtitle", ""),
         publisher=cfg_doc.get("publisher", "International Atomic Energy Agency"),
@@ -108,7 +151,8 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
         document_category=category,
         document_type=document_type,
         document_domain=domain,
-        document_subdomain=cfg_doc.get("document_subdomain") or cfg_fallback.get("document_subdomain", ""),
+        document_subdomain=cfg_doc.get("document_subdomain")
+        or cfg_fallback.get("document_subdomain", ""),
         sti_pub_number=sti,
         isbn_pdf=isbn_pdf,
         language=cfg_doc.get("language", "en"),
@@ -117,8 +161,12 @@ def infer_metadata(pdf_path: Path, pages: list[PageText], config: dict[str, Any]
             "title": title_source,
             "series_name": "config" if cfg_doc.get("series_name") else "inferred",
             "series_number": "config" if cfg_doc.get("series_number") else "inferred",
-            "document_category": "config" if cfg_doc.get("document_category") else ("inferred" if inferred_category else "fallback"),
-            "document_type": "config" if cfg_doc.get("document_type") else ("inferred_from_category" if category else "fallback"),
+            "document_category": "config"
+            if cfg_doc.get("document_category")
+            else ("inferred" if inferred_category else "fallback"),
+            "document_type": "config"
+            if cfg_doc.get("document_type")
+            else ("inferred_from_category" if category else "fallback"),
         },
     )
 
@@ -326,8 +374,14 @@ def _title_case(text: str) -> str:
 def _infer_series_name(text: str) -> str:
     matches = []
     patterns = [
-        ("IAEA Nuclear Security Series", r"IAEA\s+Nuclear\s+Security\s+Series|NUCLEAR SECURITY SERIES"),
-        ("IAEA Safety Standards Series", r"IAEA\s+Safety\s+Standards(?:\s+Series)?|SAFETY STANDARDS(?: SERIES)?"),
+        (
+            "IAEA Nuclear Security Series",
+            r"IAEA\s+Nuclear\s+Security\s+Series|NUCLEAR SECURITY SERIES",
+        ),
+        (
+            "IAEA Safety Standards Series",
+            r"IAEA\s+Safety\s+Standards(?:\s+Series)?|SAFETY STANDARDS(?: SERIES)?",
+        ),
         ("IAEA Safety Series", r"IAEA\s+Safety\s+Series|SAFETY SERIES"),
     ]
     for label, pattern in patterns:
@@ -399,12 +453,16 @@ def _infer_document_domain(text: str, series_name: str) -> str:
     haystack = f"{series_name}\n{text}"
     if re.search(r"nuclear\s+security|NUCLEAR SECURITY", haystack, flags=re.I):
         return "nuclear_security"
-    if re.search(r"safety\s+standards|nuclear\s+safety|SAFETY STANDARDS|SAFETY SERIES", haystack, flags=re.I):
+    if re.search(
+        r"safety\s+standards|nuclear\s+safety|SAFETY STANDARDS|SAFETY SERIES", haystack, flags=re.I
+    ):
         return "nuclear_safety"
     return ""
 
 
-def _infer_category(text: str, series_number: str = "", document_domain: str = "", source_name: str = "") -> str:
+def _infer_category(
+    text: str, series_number: str = "", document_domain: str = "", source_name: str = ""
+) -> str:
     # Prefer standalone cover/title-page occurrences. The standard NSS front
     # matter includes a generic list of all publication categories, so a simple
     # substring search will often pick the wrong category.
@@ -472,7 +530,9 @@ def _infer_category_family(text: str, document_domain: str = "") -> str:
     if re.search(r"\bImplementing Guides?\b", compact, flags=re.I):
         return "Implementing Guides"
 
-    if re.search(r"\bSafety Fundamentals\b", compact, flags=re.I) or re.search(r"\bSF-\d+\b", normalized, flags=re.I):
+    if re.search(r"\bSafety Fundamentals\b", compact, flags=re.I) or re.search(
+        r"\bSF-\d+\b", normalized, flags=re.I
+    ):
         return "Safety Fundamentals"
     if re.search(r"\b(?:GSR|GS-R)\b", normalized, flags=re.I):
         return "General Safety Requirements"
@@ -539,7 +599,9 @@ def _infer_isbn_pdf(text: str) -> str:
     return m.group(1) if m else ""
 
 
-def _make_document_id(series_number: str, title: str, series_name: str = "", document_domain: str = "") -> str:
+def _make_document_id(
+    series_number: str, title: str, series_name: str = "", document_domain: str = ""
+) -> str:
     if series_number:
         s = canonical_dash(_compact_series_number(series_number)).replace("–", "-")
         s = re.sub(r"(?i)^No\.\s*", "", s).strip()

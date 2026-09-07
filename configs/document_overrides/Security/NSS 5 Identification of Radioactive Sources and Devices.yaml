@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "591182abe5020a0880d12390c8ef83965e472068ee93151cf0a627af5b4bf595"
+
 # Official source:
 # https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1278_web.pdf
 document:
@@ -11,3 +15,8 @@ document:
   sti_pub_number: "STI/PUB/1278"
   # The IAEA lists ISBN 92-0-111406-0 without a PDF format label, so
   # isbn_pdf is intentionally omitted.
+parser:
+  font_decoders:
+    - pdf_pages: [153]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29

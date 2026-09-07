@@ -1,0 +1,22 @@
+# Source reviewed against the rendered PDF. These are citations after scientific symbols,
+# not exponents; explicit ownership preserves both notation and the note link.
+match:
+  source_sha256: 58a4f5a4fba027262e47066a5f3e6535cf44d79f315699e3263f3a83e1dbc989
+parser:
+  footnote_anchors:
+  - pdf_pages:
+    - 127
+    footnote_id: '1'
+    element_id: I–29
+    text: 250 mSv1
+    section_path:
+    - Annex I
+    - Emergency workers and helpers from the public
+  - pdf_pages:
+    - 183
+    footnote_id: '7'
+    element_id: I–141
+    text: 111 TBq7
+    section_path:
+    - Annex I
+    - Conclusions

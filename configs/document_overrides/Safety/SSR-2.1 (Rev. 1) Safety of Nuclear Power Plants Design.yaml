@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "9d47e85a16fd984c7ec5440978086bd501e807849db109a66cf95b6bdb2777ea"
+
 # Official source:
 # https://www.iaea.org/publications/10885/safety-of-nuclear-power-plants-design
 document:

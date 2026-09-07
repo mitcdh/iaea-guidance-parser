@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "f57026313864687c16f6c90fc4881204344b700534aeb8b502ec1053c2fa951d"
+
 # Official source:
 # https://www-pub.iaea.org/MTCD/Publications/PDF/PUB1953_web.pdf
 document:
@@ -10,3 +14,12 @@ document:
   document_type: "specific_safety_guide"
   sti_pub_number: "STI/PUB/1953"
   isbn_pdf: "978-92-0-119121-2"
+parser:
+  # This reviewed source label omits the final full stop. Keep the exception
+  # page- and region-scoped so ordinary decimal text cannot become a paragraph.
+  label_exceptions:
+    - element_type: paragraph
+      pdf_page: 25
+      region: Body
+      raw_label: "106.2"
+      canonical_id: "106.2"

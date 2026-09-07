@@ -1,0 +1,14 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "c6c558840c16dface53b2551132d12d636d3f1faf2a4b1ee12aca0834ce143be"
+
+document:
+  title: "Monitoring for Radioactive Material in International Mail Transported by Public Postal Operators"
+parser:
+  font_decoders:
+    - pdf_pages: [2]
+      fonts: [TimesTen-Roman, TimesTen-Bold, TimesTen-Italic]
+      ascii_offset: 31
+    - pdf_pages: [52]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29

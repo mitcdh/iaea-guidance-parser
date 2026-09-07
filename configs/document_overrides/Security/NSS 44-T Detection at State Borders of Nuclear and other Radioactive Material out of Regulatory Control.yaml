@@ -1,3 +1,7 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "137f692fc84cacd515344087658ae1d066b68eae9a6ebab412867ed65c370524"
+
 # Official source:
 # https://www.iaea.org/publications/14777/detection-at-state-borders-of-nuclear-and-other-radioactive-material-out-of-regulatory-control
 document:

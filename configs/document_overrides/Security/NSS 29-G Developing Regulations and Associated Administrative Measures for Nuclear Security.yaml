@@ -1,0 +1,1144 @@
+# Exact source-bound headings, specimen scopes and footnote links.
+match:
+  source_sha256: c7bb22851ab497b4a1414d0720a1cb76cd02e3b79468bd7d0a41ff9ec386664e
+parser:
+  reading_order_pages:
+  - 1
+  - 23
+  - 25
+  - 28
+  - 31
+  - 33
+  - 36
+  - 39
+  - 41
+  - 44
+  - 47
+  - 53
+  - 60
+  - 62
+  - 63
+  - 64
+  - 65
+  - 66
+  - 67
+  - 76
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA NUCLEAR SECURITY SERIES
+    3: FrontMatter
+    4: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    10: FrontMatter
+    71: BackMatter
+    72: BackMatter
+    73: BackMatter
+    74: BackMatter
+    75: BackMatter
+    76: BackMatter
+  heading_continuations:
+  - pdf_pages:
+    - 23
+    lines:
+    - 4. APPLICATION OF THE GUIDANCE TO SPECIFIC
+    - SUBJECTS WITHIN NUCLEAR SECURITY
+  - pdf_pages:
+    - 41
+    lines:
+    - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY
+    - EVENTS
+  - pdf_pages:
+    - 25
+    lines:
+    - Considerations for a State to select appropriate regulations, agreements and
+    - associated administrative measures
+  - pdf_pages:
+    - 28
+    lines:
+    - Considerations for a State to select appropriate regulations, agreements and
+    - associated administrative measures for the security of nuclear and other
+    - radioactive material in transport
+  - pdf_pages:
+    - 31
+    lines:
+    - Actions for the State to select appropriate regulations, agreements and
+    - associated administrative measures for the import and export control of
+    - radioactive sources
+  - pdf_pages:
+    - 31
+    lines:
+    - Identification of the responsibilities within a State for the import and export
+    - control of radioactive sources
+  - pdf_pages:
+    - 33
+    lines:
+    - Actions for a State to select appropriate regulations, agreements and
+    - associated administrative measures for threat assessment
+  - pdf_pages:
+    - 36
+    lines:
+    - Actions for a State to select appropriate regulations, agreements and
+    - associated administrative measures for the security of information
+  - pdf_pages:
+    - 39
+    lines:
+    - Actions for a State to select appropriate regulations, agreements and
+    - associated administrative measures for detection of material out of
+    - regulatory control
+  - pdf_pages:
+    - 39
+    lines:
+    - Identification of responsibilities within a State for the detection of material
+      out
+    - of regulatory control
+  - pdf_pages:
+    - 44
+    lines:
+    - Actions for a State to select appropriate regulations, agreements and
+    - associated administrative measures for preparedness and response
+  - pdf_pages:
+    - 47
+    lines:
+    - Actions for the State to select appropriate regulations, agreements and
+    - associated administrative measures for offences and penalties related to
+    - nuclear security including criminalization
+  - pdf_pages:
+    - 53
+    lines:
+    - Outline of a regulation for the security of radioactive sources for possession,
+    - use, storage and transfer
+  - pdf_pages:
+    - 53
+    lines:
+    - Part I. General Provisions
+  - pdf_pages:
+    - 53
+    lines:
+    - Article 1. Entry into force [unless provided for in other legislation]
+  - pdf_pages:
+    - 54
+    lines:
+    - Article 2. Purpose
+  - pdf_pages:
+    - 54
+    lines:
+    - Article 3. Scope
+  - pdf_pages:
+    - 54
+    lines:
+    - Article 4. Fundamental obligation
+  - pdf_pages:
+    - 54
+    lines:
+    - Article 5. Definitions [unless provided for in primary legislation]
+  - pdf_pages:
+    - 54
+    lines:
+    - Article 6. Responsibilities of licensees
+  - pdf_pages:
+    - 55
+    lines:
+    - Article 7. Integrated management system
+  - pdf_pages:
+    - 55
+    lines:
+    - Article 8. Qualification and training
+  - pdf_pages:
+    - 55
+    lines:
+    - Article 9. Requirements for transfer of radioactive sources
+  - pdf_pages:
+    - 55
+    lines:
+    - Article 10. Regulatory inspection of premises and information
+  - pdf_pages:
+    - 56
+    lines:
+    - Article 11. Reporting of events
+  - pdf_pages:
+    - 56
+    lines:
+    - Part II. Requirements for security in possession, use and storage
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 12. Security levels
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 13. Assignment of sources to security levels [this may be done in an
+    - annex containing a schedule of tables]
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 14. Security objectives and measures for radioactive sources
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 15. Security management
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 16. Requirements for security plans
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 17. Inventory and records
+  - pdf_pages:
+    - 57
+    lines:
+    - Article 18. Physical verification
+  - pdf_pages:
+    - 60
+    lines:
+    - Outline of an MOU between a competent authority in State A and a
+    - competent authority in State B for the exchange of information and
+    - cooperation in nuclear security matters
+  - pdf_pages:
+    - 60
+    lines:
+    - PARTIES
+  - pdf_pages:
+    - 63
+    lines:
+    - Outline of an MOU between the nuclear regulatory authority of State A and
+    - the prosecuting authority of State A
+  - pdf_pages:
+    - 63
+    lines:
+    - Parties to the MOU
+  - pdf_pages:
+    - 60
+    lines:
+    - 1.0 Definitions
+  - pdf_pages:
+    - 61
+    lines:
+    - 2.0 Scope of the Agreement
+  - pdf_pages:
+    - 61
+    lines:
+    - 2.1 Information exchange
+  - pdf_pages:
+    - 61
+    lines:
+    - 2.2 Cooperation
+  - pdf_pages:
+    - 61
+    lines:
+    - 3.0 Administrators
+  - pdf_pages:
+    - 61
+    lines:
+    - 4.0 Duties of administrators
+  - pdf_pages:
+    - 61
+    lines:
+    - 5.0 Implementation and interpretation
+  - pdf_pages:
+    - 62
+    lines:
+    - 6.0 Costs
+  - pdf_pages:
+    - 62
+    lines:
+    - 7.0 Entire Agreement
+  - pdf_pages:
+    - 62
+    lines:
+    - 8.0 Entry into effect and early termination
+  - pdf_pages:
+    - 62
+    lines:
+    - SIGNATURES of the Authorized Officers of the Parties
+  - pdf_pages:
+    - 63
+    lines:
+    - I. Purpose
+  - pdf_pages:
+    - 63
+    lines:
+    - II. Background [to the MOU]
+  - pdf_pages:
+    - 64
+    lines:
+    - III. Areas of cooperation
+  - pdf_pages:
+    - 64
+    lines:
+    - A. PA notification to the NRA of information concerning nuclear security
+  - pdf_pages:
+    - 65
+    lines:
+    - B. NRA notification to the PA of suspected criminal violations
+  - pdf_pages:
+    - 65
+    lines:
+    - C. Procedure for parallel NRA regulatory activities that may affect future
+    - PA activity
+  - pdf_pages:
+    - 66
+    lines:
+    - D. Timing of notification of matters referred to the PA
+  - pdf_pages:
+    - 66
+    lines:
+    - E. NRA assistance to the PA
+  - pdf_pages:
+    - 66
+    lines:
+    - F. Exchange of information related to civil or criminal enforcement
+  - pdf_pages:
+    - 67
+    lines:
+    - IV. Responsible officials
+  - pdf_pages:
+    - 67
+    lines:
+    - V. Effective date
+  subheading_parents:
+    4. APPLICATION OF THE GUIDANCE TO SPECIFIC SUBJECTS WITHIN NUCLEAR SECURITY:
+      GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY: []
+      International instruments:
+        23:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        32: &id001
+        - THREAT ASSESSMENT
+        33: *id001
+        35:
+        - SECURITY OF INFORMATION
+        38:
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        41: &id002
+        - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+        42: *id002
+        46:
+        - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      IAEA guidance:
+        23: &id003
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        24: *id003
+        25: *id003
+        33:
+        - THREAT ASSESSMENT
+        35: &id004
+        - SECURITY OF INFORMATION
+        36: *id004
+        38: &id005
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        39: *id005
+        42: &id006
+        - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+        43: *id006
+        44: *id006
+        46: &id007
+        - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+        47: *id007
+      Considerations for a State to select appropriate regulations, agreements and associated administrative measures:
+      - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      Identification of responsibilities within a State for regulatory activities:
+      - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      - Considerations for a State to select appropriate regulations, agreements and
+        associated administrative measures
+      Regulations:
+        25: &id008
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures
+        26: *id008
+        27: *id008
+        29: &id009
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures for the security of nuclear and other
+          radioactive material in transport
+        30: *id009
+        31:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Actions for the State to select appropriate regulations, agreements and
+          associated administrative measures for the import and export control of
+          radioactive sources
+        34:
+        - THREAT ASSESSMENT
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for threat assessment
+        37:
+        - SECURITY OF INFORMATION
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for the security of information
+        39: &id010
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for detection of material out of regulatory control
+        40: *id010
+        45:
+        - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for preparedness and response
+      Agreements:
+      - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      - Considerations for a State to select appropriate regulations, agreements and
+        associated administrative measures
+      Associated administrative measures:
+        28:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures
+        30: &id011
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures for the security of nuclear and other
+          radioactive material in transport
+        31: *id011
+        32:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Actions for the State to select appropriate regulations, agreements and
+          associated administrative measures for the import and export control of
+          radioactive sources
+        35:
+        - THREAT ASSESSMENT
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for threat assessment
+        37: &id012
+        - SECURITY OF INFORMATION
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for the security of information
+        38: *id012
+        41:
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for detection of material out of regulatory control
+        46:
+        - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for preparedness and response
+      ? Considerations for a State to select appropriate regulations, agreements and
+        associated administrative measures for the security of nuclear and other radioactive
+        material in transport
+      : - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      Identification of responsibilities within a State for transport security:
+      - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      - Considerations for a State to select appropriate regulations, agreements and
+        associated administrative measures for the security of nuclear and other radioactive
+        material in transport
+      Agreements between competent authorities within a State:
+        30:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures for the security of nuclear and other
+          radioactive material in transport
+        31: &id013
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Actions for the State to select appropriate regulations, agreements and
+          associated administrative measures for the import and export control of
+          radioactive sources
+        32: *id013
+        34:
+        - THREAT ASSESSMENT
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for threat assessment
+        37:
+        - SECURITY OF INFORMATION
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for the security of information
+        40:
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for detection of material out of regulatory control
+      Agreements between competent authorities of different States:
+        30:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Considerations for a State to select appropriate regulations, agreements
+          and associated administrative measures for the security of nuclear and other
+          radioactive material in transport
+        32:
+        - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+        - Actions for the State to select appropriate regulations, agreements and
+          associated administrative measures for the import and export control of
+          radioactive sources
+        34: &id014
+        - THREAT ASSESSMENT
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for threat assessment
+        35: *id014
+        37:
+        - SECURITY OF INFORMATION
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for the security of information
+        40: &id015
+        - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for detection of material out of regulatory control
+        41: *id015
+        45: &id016
+        - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+        - Actions for a State to select appropriate regulations, agreements and associated
+          administrative measures for preparedness and response
+        46: *id016
+      ? Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for the import and export control of radioactive sources
+      : - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      Identification of the responsibilities within a State for the import and export control of radioactive sources:
+      - GENERAL REGULATORY ACTIVITIES FOR NUCLEAR SECURITY
+      - Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for the import and export control of radioactive sources
+      THREAT ASSESSMENT: []
+      ? Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for threat assessment
+      : - THREAT ASSESSMENT
+      Identification of responsibilities within a State for threat assessment:
+      - THREAT ASSESSMENT
+      - Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for threat assessment
+      SECURITY OF INFORMATION: []
+      ? Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for the security of information
+      : - SECURITY OF INFORMATION
+      Identification of responsibilities within a State for the security of information:
+      - SECURITY OF INFORMATION
+      - Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for the security of information
+      DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL: []
+      ? Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for detection of material out of regulatory control
+      : - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+      Identification of responsibilities within a State for the detection of material out of regulatory control:
+      - DETECTION OF NUCLEAR AND OTHER RADIOACTIVE MATERIAL OUT OF REGULATORY CONTROL
+      - Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for detection of material out of regulatory control
+      PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS: []
+      ? Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for preparedness and response
+      : - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+      Identification of responsibilities for preparedness and response within a State:
+      - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+      - Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for preparedness and response
+      Agreements between competent authorities within the State:
+      - PREPAREDNESS FOR AND RESPONSE TO NUCLEAR SECURITY EVENTS
+      - Actions for a State to select appropriate regulations, agreements and associated
+        administrative measures for preparedness and response
+      OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION: []
+      ? Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for offences and penalties related to nuclear security
+        including criminalization
+      : - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      Assertion of jurisdiction over alleged offenders:
+      - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      - Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for offences and penalties related to nuclear security
+        including criminalization
+      Investigations:
+      - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      - Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for offences and penalties related to nuclear security
+        including criminalization
+      Prosecution and extradition:
+      - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      - Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for offences and penalties related to nuclear security
+        including criminalization
+      International mutual legal assistance:
+      - OFFENCES AND PENALTIES RELATED TO NUCLEAR SECURITY INCLUDING CRIMINALIZATION
+      - Actions for the State to select appropriate regulations, agreements and associated
+        administrative measures for offences and penalties related to nuclear security
+        including criminalization
+    3. OVERVIEW OF REGULATIONS, AGREEMENTS AND ASSOCIATED ADMINISTRATIVE MEASURES TO GOVERN THE NUCLEAR SECURITY REGIME:
+      Agreements between competent authorities within a State:
+      - AGREEMENTS
+      Agreements between competent authorities of different States:
+      - AGREEMENTS
+    Appendix I:
+      OVERVIEW OF CONTENT OF REGULATIONS:
+      - EXAMPLE REGULATIONS
+      EXAMPLE OF A REGULATION:
+      - EXAMPLE REGULATIONS
+      Outline of a regulation for the security of radioactive sources for possession, use, storage and transfer:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      Part I. General Provisions:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      Part II. Requirements for security in possession, use and storage:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      Article 1. Entry into force [unless provided for in other legislation]:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 2. Purpose:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 3. Scope:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 4. Fundamental obligation:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 5. Definitions [unless provided for in primary legislation]:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 6. Responsibilities of licensees:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 7. Integrated management system:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 8. Qualification and training:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 9. Requirements for transfer of radioactive sources:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 10. Regulatory inspection of premises and information:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 11. Reporting of events:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part I. General Provisions
+      Article 12. Security levels:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 13. Assignment of sources to security levels [this may be done in an annex containing a schedule of tables]:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 14. Security objectives and measures for radioactive sources:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 15. Security management:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 16. Requirements for security plans:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 17. Inventory and records:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+      Article 18. Physical verification:
+      - EXAMPLE REGULATIONS
+      - EXAMPLE OF A REGULATION
+      - Outline of a regulation for the security of radioactive sources for possession,
+        use, storage and transfer
+      - Part II. Requirements for security in possession, use and storage
+    Appendix II:
+      OVERVIEW OF THE CONTENT OF AGREEMENTS:
+      - EXAMPLE AGREEMENTS
+      EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF TWO STATES:
+      - EXAMPLE AGREEMENTS
+      EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN A STATE:
+      - EXAMPLE AGREEMENTS
+      ? Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      : - EXAMPLE AGREEMENTS
+        - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+          TWO STATES
+      Outline of an MOU between the nuclear regulatory authority of State A and the prosecuting authority of State A:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      PARTIES:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      Parties to the MOU:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      1.0 Definitions:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      2.0 Scope of the Agreement:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      2.1 Information exchange:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      - 2.0 Scope of the Agreement
+      2.2 Cooperation:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      - 2.0 Scope of the Agreement
+      3.0 Administrators:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      4.0 Duties of administrators:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      5.0 Implementation and interpretation:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      6.0 Costs:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      7.0 Entire Agreement:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      8.0 Entry into effect and early termination:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      SIGNATURES of the Authorized Officers of the Parties:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES OF
+        TWO STATES
+      - Outline of an MOU between a competent authority in State A and a competent
+        authority in State B for the exchange of information and cooperation in nuclear
+        security matters
+      I. Purpose:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      II. Background [to the MOU]:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      III. Areas of cooperation:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      A. PA notification to the NRA of information concerning nuclear security:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      B. NRA notification to the PA of suspected criminal violations:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      C. Procedure for parallel NRA regulatory activities that may affect future PA activity:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      D. Timing of notification of matters referred to the PA:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      E. NRA assistance to the PA:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      F. Exchange of information related to civil or criminal enforcement:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      - III. Areas of cooperation
+      IV. Responsible officials:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+      V. Effective date:
+      - EXAMPLE AGREEMENTS
+      - EXAMPLE OF A MEMORANDUM OF UNDERSTANDING BETWEEN COMPETENT AUTHORITIES WITHIN
+        A STATE
+      - Outline of an MOU between the nuclear regulatory authority of State A and
+        the prosecuting authority of State A
+  local_scope_patterns:
+  - pdf_pages:
+    - 53
+    pattern: ^Outline\ of\ a\ regulation\ for\ the\ security\ of\ radioactive\ sources\
+      for\ possession,\ use,\ storage\ and\ transfer$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 53
+    pattern: ^Part\ I\.\ General\ Provisions$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 53
+    pattern: ^Article\ 1\.\ Entry\ into\ force\ \[unless\ provided\ for\ in\ other\
+      legislation\]$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 54
+    pattern: ^Article\ 2\.\ Purpose$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 54
+    pattern: ^Article\ 3\.\ Scope$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 54
+    pattern: ^Article\ 4\.\ Fundamental\ obligation$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 54
+    pattern: ^Article\ 5\.\ Definitions\ \[unless\ provided\ for\ in\ primary\ legislation\]$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 54
+    pattern: ^Article\ 6\.\ Responsibilities\ of\ licensees$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 55
+    pattern: ^Article\ 7\.\ Integrated\ management\ system$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 55
+    pattern: ^Article\ 8\.\ Qualification\ and\ training$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 55
+    pattern: ^Article\ 9\.\ Requirements\ for\ transfer\ of\ radioactive\ sources$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 55
+    pattern: ^Article\ 10\.\ Regulatory\ inspection\ of\ premises\ and\ information$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 56
+    pattern: ^Article\ 11\.\ Reporting\ of\ events$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 56
+    pattern: ^Part\ II\.\ Requirements\ for\ security\ in\ possession,\ use\ and\
+      storage$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 12\.\ Security\ levels$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 13\.\ Assignment\ of\ sources\ to\ security\ levels\ \[this\
+      may\ be\ done\ in\ an\ annex\ containing\ a\ schedule\ of\ tables\]$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 14\.\ Security\ objectives\ and\ measures\ for\ radioactive\
+      sources$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 15\.\ Security\ management$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 16\.\ Requirements\ for\ security\ plans$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 17\.\ Inventory\ and\ records$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 57
+    pattern: ^Article\ 18\.\ Physical\ verification$
+    case_sensitive: true
+    id_template: REGULATION SPECIMEN
+  - pdf_pages:
+    - 60
+    pattern: ^EXAMPLE\ OF\ A\ MEMORANDUM\ OF\ UNDERSTANDING\ BETWEEN\ COMPETENT\ AUTHORITIES\
+      OF\ TWO\ STATES$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 60
+    pattern: ^Outline\ of\ an\ MOU\ between\ a\ competent\ authority\ in\ State\ A\
+      and\ a\ competent\ authority\ in\ State\ B\ for\ the\ exchange\ of\ information\
+      and\ cooperation\ in\ nuclear\ security\ matters$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 60
+    pattern: ^PARTIES$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 62
+    pattern: ^EXAMPLE\ OF\ A\ MEMORANDUM\ OF\ UNDERSTANDING\ BETWEEN\ COMPETENT\ AUTHORITIES\
+      WITHIN\ A\ STATE$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 63
+    pattern: ^Outline\ of\ an\ MOU\ between\ the\ nuclear\ regulatory\ authority\
+      of\ State\ A\ and\ the\ prosecuting\ authority\ of\ State\ A$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 63
+    pattern: ^Parties\ to\ the\ MOU$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 60
+    pattern: ^1\.0\ Definitions$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^2\.0\ Scope\ of\ the\ Agreement$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^2\.1\ Information\ exchange$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^2\.2\ Cooperation$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^3\.0\ Administrators$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^4\.0\ Duties\ of\ administrators$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 61
+    pattern: ^5\.0\ Implementation\ and\ interpretation$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 62
+    pattern: ^6\.0\ Costs$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 62
+    pattern: ^7\.0\ Entire\ Agreement$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 62
+    pattern: ^8\.0\ Entry\ into\ effect\ and\ early\ termination$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 62
+    pattern: ^SIGNATURES\ of\ the\ Authorized\ Officers\ of\ the\ Parties$
+    case_sensitive: true
+    id_template: MOU BETWEEN STATES
+  - pdf_pages:
+    - 63
+    pattern: ^I\.\ Purpose$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 63
+    pattern: ^II\.\ Background\ \[to\ the\ MOU\]$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 64
+    pattern: ^III\.\ Areas\ of\ cooperation$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 64
+    pattern: ^A\.\ PA\ notification\ to\ the\ NRA\ of\ information\ concerning\ nuclear\
+      security$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 65
+    pattern: ^B\.\ NRA\ notification\ to\ the\ PA\ of\ suspected\ criminal\ violations$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 65
+    pattern: ^C\.\ Procedure\ for\ parallel\ NRA\ regulatory\ activities\ that\ may\
+      affect\ future\ PA\ activity$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 66
+    pattern: ^D\.\ Timing\ of\ notification\ of\ matters\ referred\ to\ the\ PA$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 66
+    pattern: ^E\.\ NRA\ assistance\ to\ the\ PA$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 66
+    pattern: ^F\.\ Exchange\ of\ information\ related\ to\ civil\ or\ criminal\ enforcement$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 67
+    pattern: ^IV\.\ Responsible\ officials$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  - pdf_pages:
+    - 67
+    pattern: ^V\.\ Effective\ date$
+    case_sensitive: true
+    id_template: MOU WITHIN STATE
+  ignore_actual_text_pages:
+  - 2
+  - 12
+  - 13
+  - 14
+  - 16
+  - 17
+  - 18
+  - 23
+  - 24
+  - 25
+  - 33
+  - 34
+  - 39
+  - 58
+  - 59
+  - 62
+  footnote_pages:
+  - 12
+  - 14
+  - 15
+  - 16
+  - 19
+  - 20
+  - 26
+  - 36

@@ -1,0 +1,166 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+# Headings, boundaries and note anchors verified from the physical pages listed.
+match:
+  source_sha256: c99f951e55b2b7d75ef6f37f0d4e093d1cdf2645a07b04d3e423d11d84a9e2b7
+document:
+  title: Fundamental Safety Principles
+parser:
+  font_decoders:
+  - pdf_pages:
+    - 1
+    - 36
+    - 37
+    fonts:
+    - ArialMT
+    - Arial-BoldMT
+    - Arial-BoldItalicMT
+    ascii_offset: 29
+    replacements:
+      ¼: €
+      ²: —
+      ±: –
+  - pdf_pages:
+    - 2
+    fonts:
+    - TimesTen-Roman
+    - TimesTen-Bold
+    - TimesTen-Italic
+    ascii_offset: 31
+  page_regions:
+    2:
+      region: FrontMatter
+      section: IAEA SAFETY RELATED PUBLICATIONS
+    3: FrontMatter
+    5: FrontMatter
+    6: FrontMatter
+    9: FrontMatter
+    13: FrontMatter
+    37: BackMatter
+    33:
+      region: BackMatter
+      section: BODIES FOR THE ENDORSEMENT OF IAEA SAFETY STANDARDS
+  heading_continuations:
+  - pdf_pages:
+    - 9
+    lines:
+    - PREFACE BY THE JOINT
+    - SPONSORING ORGANIZATIONS
+  - pdf_pages:
+    - 20
+    lines:
+    - 'Principle 1: Responsibility for safety'
+  - pdf_pages:
+    - 21
+    lines:
+    - 'Principle 2: Role of government'
+  - pdf_pages:
+    - 22
+    lines:
+    - 'Principle 3: Leadership and management for safety'
+  - pdf_pages:
+    - 24
+    lines:
+    - 'Principle 4: Justification of facilities and activities'
+  - pdf_pages:
+    - 24
+    lines:
+    - 'Principle 5: Optimization of protection'
+  - pdf_pages:
+    - 25
+    lines:
+    - 'Principle 6: Limitation of risks to individuals'
+  - pdf_pages:
+    - 26
+    lines:
+    - 'Principle 7: Protection of present and future generations'
+  - pdf_pages:
+    - 27
+    lines:
+    - 'Principle 8: Prevention of accidents'
+  - pdf_pages:
+    - 28
+    lines:
+    - 'Principle 9: Emergency preparedness and response'
+  - pdf_pages:
+    - 29
+    lines:
+    - 'Principle 10: Protective actions to reduce existing or unregulated'
+    - radiation risks
+  - pdf_pages:
+    - 2
+    lines:
+    - IAEA SAFETY RELATED PUBLICATIONS
+  - pdf_pages:
+    - 2
+    lines:
+    - IAEA SAFETY STANDARDS
+  - pdf_pages:
+    - 2
+    lines:
+    - OTHER SAFETY RELATED PUBLICATIONS
+  - pdf_pages:
+    - 33
+    lines:
+    - BODIES FOR THE ENDORSEMENT
+    - OF IAEA SAFETY STANDARDS
+  - pdf_pages:
+    - 33
+    lines:
+    - Commission on Safety Standards
+  - pdf_pages:
+    - 33
+    lines:
+    - Nuclear Safety Standards Committee
+  - pdf_pages:
+    - 34
+    lines:
+    - Radiation Safety Standards Committee
+  - pdf_pages:
+    - 34
+    lines:
+    - Transport Safety Standards Committee
+  - pdf_pages:
+    - 35
+    lines:
+    - Waste Safety Standards Committee
+  - pdf_pages:
+    - 3
+    lines:
+    - Safety standards survey
+  - pdf_pages:
+    - 37
+    lines:
+    - Safety through international standards
+  footnote_pages:
+  - 9
+  - 15
+  - 17
+  - 19
+  - 20
+  - 21
+  - 26
+  footnote_anchors:
+  - pdf_pages:
+    - 9
+    footnote_id: '1'
+    element_id: null
+    text: June 19931
+    section_path:
+    - PREFACE BY THE JOINT SPONSORING ORGANIZATIONS
+  - pdf_pages:
+    - 9
+    footnote_id: '2'
+    element_id: null
+    text: March 19952
+    section_path:
+    - PREFACE BY THE JOINT SPONSORING ORGANIZATIONS
+  - pdf_pages:
+    - 9
+    footnote_id: '3'
+    element_id: null
+    text: June 19953
+    section_path:
+    - PREFACE BY THE JOINT SPONSORING ORGANIZATIONS
+  reading_order_pages:
+  - 1
+  - 5

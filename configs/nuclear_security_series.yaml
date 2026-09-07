@@ -19,9 +19,11 @@ fallbacks:
   document_family: IAEA Nuclear Security Series
   document_domain: nuclear_security
 
-# Optional per-document overrides can be added here by filename, stem or relative path.
+# Optional per-document overrides use the source_sha256 from publication metadata.
 # documents:
-#   PUB1921_web.pdf:
+#   computer-security-guidance:
+#     match:
+#       source_sha256: "<64-character source_sha256 from metadata.json>"
 #     document:
 #       document_id: NSS-17-T-REV1
 #       document_category: Technical Guidance

@@ -1,0 +1,16 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+# GS-G-3.1 is absent from the current corpus. This hash is retained from
+# metadata.json in the v0.2.0 backup and v0.3.0 candidate outputs.
+match:
+  source_sha256: "f06eb4d4d93083ba66c77eb7fdfc88944239af445eaa1844badd229461135536"
+
+document:
+  title: "Application of the Management System for Facilities and Activities"
+parser:
+  font_decoders:
+    - pdf_pages: [1, 145, 146]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29
+    - pdf_pages: [2]
+      fonts: [TimesTen-Roman, TimesTen-Bold, TimesTen-Italic]
+      ascii_offset: 31

@@ -19,9 +19,11 @@ fallbacks:
   document_family: IAEA Safety Standards Series
   document_domain: nuclear_safety
 
-# Optional per-document overrides can be added here by filename, stem or relative path.
+# Optional per-document overrides use the source_sha256 from publication metadata.
 # documents:
-#   SSG-64.pdf:
+#   internal-hazards-guidance:
+#     match:
+#       source_sha256: "<64-character source_sha256 from metadata.json>"
 #     document:
 #       document_id: SSG-64
 #       document_category: Specific Safety Guide

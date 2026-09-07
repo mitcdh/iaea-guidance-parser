@@ -1,0 +1,14 @@
+# Matched to the source PDF bytes; this YAML filename is descriptive only.
+match:
+  source_sha256: "01c96c6eff39fd3dea6f3a52c3d35bb0e2626bfa81999b4c5d2e4ccd55f606e0"
+
+document:
+  title: "Storage of Radioactive Waste"
+parser:
+  font_decoders:
+    - pdf_pages: [1, 66, 67]
+      fonts: [ArialMT, Arial-BoldMT, Arial-BoldItalicMT]
+      ascii_offset: 29
+    - pdf_pages: [2]
+      fonts: [TimesTen-Roman, TimesTen-Bold, TimesTen-Italic]
+      ascii_offset: 31

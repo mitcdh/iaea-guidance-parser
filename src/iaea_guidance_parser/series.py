@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .metadata import deep_merge, load_config
+from .metadata import config_source_sha256, deep_merge, load_config
 from .models import DocumentMetadata, StructuralElement
 from .parser import IAEAGuidanceParser
+from .provenance import sha256_file
 
 
 @dataclass
@@ -37,7 +39,10 @@ def discover_pdfs(pdf_dir: Path, pattern: str = "*.pdf", recursive: bool = True)
     The suffix check is intentionally case-insensitive so files ending in .PDF
     are included on case-sensitive file systems.
     """
-    iterator = pdf_dir.rglob(pattern) if recursive else pdf_dir.glob(pattern)
+    # Glob '*.pdf' itself is case sensitive on Linux; filter suffixes after
+    # discovery for the default pattern so the documented .PDF behavior holds.
+    glob_pattern = "*" if pattern == "*.pdf" else pattern
+    iterator = pdf_dir.rglob(glob_pattern) if recursive else pdf_dir.glob(glob_pattern)
     return sorted(p for p in iterator if p.is_file() and p.suffix.lower() == ".pdf")
 
 
@@ -60,7 +65,7 @@ def build_document_config(
     1. series-level defaults under `series` and `parser`;
     2. `document_defaults` and `fallbacks` in the series config;
     3. per-document overrides under `documents` in the series config;
-    4. optional YAML file in `config_dir` named by PDF stem or file name.
+    4. optional YAML file in `config_dir` matched by source SHA-256 (or legacy filename).
 
     Document category/type are inferred from each PDF unless explicitly supplied
     under `document_defaults`, per-document overrides or config-dir YAML. A
@@ -108,9 +113,13 @@ def build_document_config(
     # `document_defaults` intentionally forces values across every document.
     # Use `fallbacks` instead when values should apply only if inference fails.
     if series_config.get("document_defaults"):
-        base_config = deep_merge(base_config, {"document": series_config.get("document_defaults") or {}})
+        base_config = deep_merge(
+            base_config, {"document": series_config.get("document_defaults") or {}}
+        )
 
-    embedded_override = _find_embedded_document_override(pdf_path, pdf_root, series_config.get("documents"))
+    embedded_override = _find_embedded_document_override(
+        pdf_path, pdf_root, series_config.get("documents")
+    )
     file_override = _find_config_file_override(pdf_path, config_dir)
     return deep_merge(base_config, embedded_override, file_override)
 
@@ -122,7 +131,7 @@ def parse_one_document(
     out_root: Path,
     series_config: dict[str, Any] | None = None,
     config_dir: Path | None = None,
-):
+) -> ParsedDocumentResult:
     cfg = build_document_config(
         pdf_path=pdf_path,
         pdf_root=pdf_root,
@@ -132,12 +141,48 @@ def parse_one_document(
     parser = IAEAGuidanceParser.from_pdf_config(pdf_path, cfg)
     metadata, records = parser.parse()
     doc_dir = out_root / "documents" / safe_path_component(metadata.document_id, pdf_path.stem)
-    return ParsedDocumentResult(source_pdf=pdf_path, output_dir=doc_dir, metadata=metadata, records=records)
+    return ParsedDocumentResult(
+        source_pdf=pdf_path, output_dir=doc_dir, metadata=metadata, records=records
+    )
+
+
+def prune_stale_document_outputs(out_root: Path, expected_output_dirs: list[Path]) -> list[Path]:
+    """Remove generated per-document directories absent from a complete run.
+
+    Only directories containing the parser's metadata and structural-index
+    files are eligible.  Symlinks and unrecognized directories are preserved,
+    so a series refresh cannot erase unrelated user material.
+    """
+    documents_dir = out_root / "documents"
+    if not documents_dir.is_dir():
+        return []
+    expected_names = {path.name for path in expected_output_dirs}
+    removed: list[Path] = []
+    for child in sorted(documents_dir.iterdir()):
+        if child.name in expected_names or child.is_symlink() or not child.is_dir():
+            continue
+        generated_markers = [child / "metadata.json", child / "structural_index.jsonl"]
+        if not all(marker.is_file() for marker in generated_markers):
+            continue
+        shutil.rmtree(child)
+        removed.append(child)
+    return removed
 
 
 def _find_config_file_override(pdf_path: Path, config_dir: Path | None) -> dict[str, Any]:
     if not config_dir:
         return {}
+    configs = {
+        path: load_config(path)
+        for path in sorted(config_dir.glob("*"))
+        if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}
+    }
+    matched = _find_hash_override(pdf_path, [(str(path), cfg) for path, cfg in configs.items()])
+    if matched is not None:
+        return matched
+
+    # Only selector-free files use the old filename convention. A nonmatching
+    # hash must never fall back to a coincidentally identical PDF filename.
     candidates = [
         config_dir / f"{pdf_path.name}.yaml",
         config_dir / f"{pdf_path.stem}.yaml",
@@ -145,12 +190,37 @@ def _find_config_file_override(pdf_path: Path, config_dir: Path | None) -> dict[
         config_dir / f"{pdf_path.stem}.yml",
     ]
     for candidate in candidates:
-        if candidate.exists():
-            return load_config(candidate)
+        if candidate in configs and "match" not in configs[candidate]:
+            return configs[candidate]
     return {}
 
 
-def _find_embedded_document_override(pdf_path: Path, pdf_root: Path, documents_config: Any) -> dict[str, Any]:
+def _find_hash_override(
+    pdf_path: Path, candidates: list[tuple[str, dict[str, Any]]]
+) -> dict[str, Any] | None:
+    """Select one override for these bytes, independently of paths or titles."""
+    source_hash = None
+    matches = []
+    for label, config in candidates:
+        expected_hash = config_source_sha256(config, label)
+        if expected_hash is None:
+            continue
+        if source_hash is None:
+            source_hash = sha256_file(pdf_path)
+        if expected_hash == source_hash:
+            matches.append((label, config))
+    if len(matches) > 1:
+        labels = ", ".join(label for label, _ in matches)
+        raise ValueError(f"Multiple overrides match source_sha256 for {pdf_path}: {labels}")
+    if not matches:
+        return None
+    # Routing metadata is excluded from the effective configuration fingerprint.
+    return {key: value for key, value in matches[0][1].items() if key != "match"}
+
+
+def _find_embedded_document_override(
+    pdf_path: Path, pdf_root: Path, documents_config: Any
+) -> dict[str, Any]:
     if not documents_config:
         return {}
 
@@ -159,18 +229,30 @@ def _find_embedded_document_override(pdf_path: Path, pdf_root: Path, documents_c
     except ValueError:
         rel = pdf_path.name
 
-    keys = {pdf_path.name, pdf_path.stem, rel, rel.replace("\\", "/")}
+    keys = list(dict.fromkeys([rel.replace("\\", "/"), rel, pdf_path.name, pdf_path.stem]))
+
+    if isinstance(documents_config, dict):
+        candidates = [(f"documents.{key}", value) for key, value in documents_config.items()]
+    elif isinstance(documents_config, list):
+        candidates = [(f"documents[{i}]", value) for i, value in enumerate(documents_config)]
+    else:
+        return {}
+    matched = _find_hash_override(
+        pdf_path, [(label, value) for label, value in candidates if isinstance(value, dict)]
+    )
+    if matched is not None:
+        return _coerce_document_override(matched)
 
     if isinstance(documents_config, dict):
         for key in keys:
             value = documents_config.get(key)
-            if value:
+            if isinstance(value, dict) and value and "match" not in value:
                 return _coerce_document_override(value)
         return {}
 
     if isinstance(documents_config, list):
         for item in documents_config:
-            if not isinstance(item, dict):
+            if not isinstance(item, dict) or "match" in item:
                 continue
             item_keys = {
                 str(item.get("source_file", "")),
@@ -179,7 +261,7 @@ def _find_embedded_document_override(pdf_path: Path, pdf_root: Path, documents_c
                 str(item.get("stem", "")),
                 str(item.get("pdf", "")),
             }
-            if keys.intersection(item_keys):
+            if set(keys).intersection(item_keys):
                 return _coerce_document_override(item)
     return {}
 
